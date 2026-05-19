@@ -31,25 +31,25 @@ param openaiName string = '${baseName}openai'
 param docintelName string = '${baseName}docintel'
 
 @description('The name of the ADLS Storage Account')
-param storageAccountName string = '${baseName}store'
+param storageAccountName string = '${baseName}${substring(utcNow('yyyyMMddHHmmss'), 11, 3)}sa'
 
 @description('The name of the Azure Container Registry')
 param acrName string = '${baseName}acr'
 
 @description('The name of the Log Analytics Workspace')
-param lawName string = '${baseName}-log'
+param lawName string = '${baseName}-law'
 
 @description('The name of the Container App Environment')
 param envName string = '${baseName}-env'
 
 @description('The name of the Container App (Backend API)')
-param backendAppName string = '${baseName}-api'
+param backendAppName string = '${baseName}-capp'
 
 @description('The name of the App Service Plan')
 param aspName string = '${baseName}-asp'
 
 @description('The name of the Frontend App Service Web App')
-param frontendAppName string = '${baseName}-ui'
+param frontendAppName string = '${baseName}-webapp'
 
 @description('The Azure region for the resource group and resources')
 param location string = 'switzerlandnorth'
@@ -107,6 +107,7 @@ module app_service './modules/app_service/main.bicep' = {
     location: rg.location
 
     subnetId: network.outputs.appSubnetId
+    acaEnvSubnetId: network.outputs.acaEnvSubnetId
     dnsZoneId: network.outputs.dnsZoneIdApp
 
     openai_endpoint: openai.outputs.openai_endpoint

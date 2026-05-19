@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "3790018818573557493"
+      "templateHash": "11268511803312198392"
     }
   },
   "parameters": {
@@ -58,7 +58,7 @@
     },
     "storageAccountName": {
       "type": "string",
-      "defaultValue": "[format('{0}store', parameters('baseName'))]",
+      "defaultValue": "[format('{0}{1}sa', parameters('baseName'), substring(utcNow('yyyyMMddHHmmss'), 11, 3))]",
       "metadata": {
         "description": "The name of the ADLS Storage Account"
       }
@@ -145,7 +145,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "9544832578944277624"
+              "templateHash": "16992944666482700363"
             }
           },
           "parameters": {
@@ -173,10 +173,26 @@
               "properties": {
                 "addressSpace": {
                   "addressPrefixes": [
-                    "10.0.0.0/16"
+                    "10.0.0.0/22"
                   ]
                 },
                 "subnets": [
+                  {
+                    "name": "aca-env-subnet",
+                    "properties": {
+                      "addressPrefix": "10.0.0.0/24",
+                      "privateEndpointNetworkPolicies": "Disabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled",
+                      "delegations": [
+                        {
+                          "name": "aca-delegation",
+                          "properties": {
+                            "serviceName": "Microsoft.App/environments"
+                          }
+                        }
+                      ]
+                    }
+                  },
                   {
                     "name": "application-subnet",
                     "properties": {
@@ -288,6 +304,10 @@
               "type": "string",
               "value": "[format('{0}/subnets/db-subnet', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
             },
+            "acaEnvSubnetId": {
+              "type": "string",
+              "value": "[format('{0}/subnets/aca-env-subnet', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
+            },
             "dnsZoneIdApp": {
               "type": "string",
               "value": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.azurewebsites.net')]"
@@ -338,7 +358,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "16391972808002382056"
+              "templateHash": "5099286013910857782"
             }
           },
           "parameters": {
@@ -365,7 +385,7 @@
             },
             "publicNetworkAccess": {
               "type": "string",
-              "defaultValue": "Enabled",
+              "defaultValue": "Disabled",
               "allowedValues": [
                 "Enabled",
                 "Disabled"
@@ -646,7 +666,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "11276707172645991432"
+              "templateHash": "15993681716579835162"
             }
           },
           "parameters": {
@@ -673,7 +693,7 @@
             },
             "publicNetworkAccess": {
               "type": "string",
-              "defaultValue": "Enabled",
+              "defaultValue": "Disabled",
               "allowedValues": [
                 "Enabled",
                 "Disabled"
@@ -701,7 +721,7 @@
               },
               "kind": "StorageV2",
               "properties": {
-                "allowBlobPublicAccess": true,
+                "allowBlobPublicAccess": false,
                 "minimumTlsVersion": "TLS1_2",
                 "supportsHttpsTrafficOnly": true,
                 "publicNetworkAccess": "[parameters('publicNetworkAccess')]"
@@ -723,7 +743,7 @@
               "apiVersion": "2023-01-01",
               "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', 'pharma')]",
               "properties": {
-                "publicAccess": "Container"
+                "publicAccess": "None"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
@@ -813,6 +833,9 @@
           "subnetId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.appSubnetId.value]"
           },
+          "acaEnvSubnetId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.acaEnvSubnetId.value]"
+          },
           "dnsZoneId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.dnsZoneIdApp.value]"
           },
@@ -863,7 +886,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "15828216943978540908"
+              "templateHash": "6949870984087149189"
             }
           },
           "parameters": {
@@ -881,6 +904,13 @@
                 "description": "Optional: Subnet ID to deploy a private endpoint for the Frontend App Service"
               }
             },
+            "acaEnvSubnetId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Subnet ID to deploy the Azure Container Apps Environment"
+              }
+            },
             "dnsZoneId": {
               "type": "string",
               "defaultValue": "",
@@ -890,7 +920,7 @@
             },
             "publicNetworkAccess": {
               "type": "string",
-              "defaultValue": "Enabled",
+              "defaultValue": "Disabled",
               "allowedValues": [
                 "Enabled",
                 "Disabled"
@@ -1011,7 +1041,8 @@
                     "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('lawName')), '2022-10-01').customerId]",
                     "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('lawName')), '2022-10-01').primarySharedKey]"
                   }
-                }
+                },
+                "vnetConfiguration": "[if(not(empty(parameters('acaEnvSubnetId'))), createObject('infrastructureSubnetId', parameters('acaEnvSubnetId'), 'internal', false()), null())]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('lawName'))]"

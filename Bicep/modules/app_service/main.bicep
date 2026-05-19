@@ -4,6 +4,9 @@ param location string = resourceGroup().location
 @description('Optional: Subnet ID to deploy a private endpoint for the Frontend App Service')
 param subnetId string = ''
 
+@description('Optional: Subnet ID to deploy the Azure Container Apps Environment')
+param acaEnvSubnetId string = ''
+
 @description('Optional: Private DNS Zone ID for the App Service')
 param dnsZoneId string = ''
 
@@ -12,7 +15,7 @@ param dnsZoneId string = ''
   'Enabled'
   'Disabled'
 ])
-param publicNetworkAccess string = 'Enabled'
+param publicNetworkAccess string = 'Disabled'
 
 @description('The name of the Azure Container Registry')
 param acrName string = 'clinicaltrialacr909'
@@ -95,6 +98,10 @@ resource env 'Microsoft.App/managedEnvironments@2023-05-01' = {
         sharedKey: law.listKeys().primarySharedKey
       }
     }
+    vnetConfiguration: !empty(acaEnvSubnetId) ? {
+      infrastructureSubnetId: acaEnvSubnetId
+      internal: false
+    } : null
   }
 }
 

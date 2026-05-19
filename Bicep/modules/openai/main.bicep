@@ -12,7 +12,7 @@ param dnsZoneId string = ''
   'Enabled'
   'Disabled'
 ])
-param publicNetworkAccess string = 'Enabled'
+param publicNetworkAccess string = 'Disabled'
 
 @description('The name of the OpenAI resource.')
 param openaiName string = 'clinicaltrialopenai909'

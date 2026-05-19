@@ -64,6 +64,11 @@ ACR_NAME=$(echo "${BASE_NAME}acr" | tr -d '-' | tr -d '_' | tr '[:upper:]' '[:lo
 ACA_NAME=$(echo "${BASE_NAME}-api" | tr -d '\r')
 UI_NAME=$(echo "${BASE_NAME}-ui" | tr -d '\r')
 
+# Calculate deterministic 3-digit suffix for storage account
+BASE_HASH=$(echo -n "$BASE_NAME" | cksum | cut -d' ' -f1)
+STORAGE_SUFFIX=$(echo "${BASE_HASH:0:3}")
+STORAGE_ACCOUNT_NAME=$(echo "${BASE_NAME}${STORAGE_SUFFIX}sa" | tr -d '\r')
+
 IMAGE_NAME="backend-api"
 IMAGE_TAG=$(date +%s | tr -d '\r')
 
@@ -106,6 +111,7 @@ DEPLOYMENT_OUTPUT=$(az deployment sub create \
     acrName="$ACR_NAME" \
     backendAppName="$ACA_NAME" \
     frontendAppName="$UI_NAME" \
+    storageAccountName="$STORAGE_ACCOUNT_NAME" \
     location="$LOCATION" \
   --output json | tr -d '\r')
 

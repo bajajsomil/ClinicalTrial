@@ -10,10 +10,26 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.0.0.0/16'
+        '10.0.0.0/22'
       ]
     }
     subnets: [
+      {
+        name: 'aca-env-subnet'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          delegations: [
+            {
+              name: 'aca-delegation'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+        }
+      }
       {
         name: 'application-subnet'
         properties: {
@@ -99,6 +115,7 @@ output vnetId string = vnet.id
 output appSubnetId string = '${vnet.id}/subnets/application-subnet'
 output webSubnetId string = '${vnet.id}/subnets/web-subnet'
 output dbSubnetId string = '${vnet.id}/subnets/db-subnet'
+output acaEnvSubnetId string = '${vnet.id}/subnets/aca-env-subnet'
 
 output dnsZoneIdApp string = privateDnsZoneApp.id
 output dnsZoneIdOpenAI string = privateDnsZoneOpenAI.id
