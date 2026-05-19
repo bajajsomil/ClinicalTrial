@@ -1,0 +1,220 @@
+{
+    "success": true,
+    "output": {
+        "capabilities": {
+            "vendor_name": "Labcorp",
+            "vendor_category": "CRO",
+            "question_category": "capabilities",
+            "vendor_capabilities": [
+                {
+                    "type": "core_service",
+                    "title": "Decentralized Clinical Trial Capabilities",
+                    "summary": "LabCorp's Covance is enhancing its decentralized clinical trial capabilities by integrating Medable's software, which will improve patient engagement and remote data collection.",
+                    "date": "May 28, 2020",
+                    "facts": [
+                        "LabCorp's Covance is one of the largest drug development CROs globally.",
+                        "The company focuses on decentralized clinical trial systems and has been enhancing these capabilities since 2019."
+                    ],
+                    "source_url": "https://www.mobihealthnews.com/news/labcorps-latest-deal-hones-digital-clinical-trials-drug-development"
+                },
+                {
+                    "type": "core_service",
+                    "title": "Advanced Clinical Trial Testing Capabilities",
+                    "summary": "Labcorp offers advanced clinical trial testing capabilities, including translational biomarkers, customized flow cytometry, digital pathology, and genomics.",
+                    "date": "N/A",
+                    "facts": [
+                        "Labcorp provides advanced testing capabilities such as translational biomarkers and customized flow cytometry.",
+                        "The company offers genomic services including gene expression, microRNA, genotyping, pharmacogenomic assays, and next-generation sequencing (NGS)."
+                    ],
+                    "source_url": "https://www.labcorp.com/biopharma/central-labs/disciplines"
+                },
+                {
+                    "type": "specialized_expertise",
+                    "title": "Biopharma Partner Solutions",
+                    "summary": "Labcorp provides a comprehensive portfolio for biopharma partners, including companion diagnostics and biomarker-enriched data solutions.",
+                    "date": "N/A",
+                    "facts": [
+                        "Labcorp offers parallel drug and diagnostic development capabilities to ensure day 1 access to therapeutic tests.",
+                        "The company supports biomarker discovery, clinical trial assay support, and companion diagnostic development."
+                    ],
+                    "source_url": "https://oncology.labcorp.com/biopharma-partners"
+                },
+                {
+                    "type": "core_service",
+                    "title": "Clinical Development Business",
+                    "summary": "Labcorp's Clinical Development business will operate as Fortrea, an independent CRO providing comprehensive drug and medical device development services.",
+                    "date": "February 9, 2023",
+                    "facts": [
+                        "Fortrea will provide Phase I through IV clinical trial management, market access, and technology solutions.",
+                        "The spin-off aims to create a leading, pure-play CRO focused on delivering life-changing medicines faster."
+                    ],
+                    "source_url": "https://ir.labcorp.com/news-releases/news-release-details/labcorp-unveils-new-name-future-independent-clinical-development"
+                },
+                {
+                    "type": "core_service",
+                    "title": "Global Laboratory Solutions",
+                    "summary": "Labcorp supports pharmaceutical and drug development companies with innovative laboratory testing services for clinical trial programs.",
+                    "date": "N/A",
+                    "facts": [
+                        "LabCorp has over 30 years of experience in clinical trials across all therapeutic areas.",
+                        "The company provides global safety testing, advanced flow cytometry applications, companion diagnostic development, and genomic services including next-generation sequencing."
+                    ],
+                    "source_url": "https://www.mesoscale.com/en/products_and_services/services/find_a_cro/labcorp"
+                },
+                {
+                    "type": "infrastructure",
+                    "title": "Global Central Lab Locations & Certifications",
+                    "summary": "Labcorp offers a combination of owned and integrated central labs, specialty labs, bioanalysis, CMC labs, and kit production facilities, providing complete lab solutions for complex clinical trials.",
+                    "date": "N/A",
+                    "facts": [
+                        "Labcorp provides complete lab solutions for complex clinical trials through its central labs and specialty labs.",
+                        "The services include bioanalysis, CMC laboratory support, and kit production."
+                    ],
+                    "source_url": "https://www.labcorp.com/biopharma/central-labs/locations"
+                },
+                {
+                    "type": "technology_platform",
+                    "title": "Global Trial Connect",
+                    "summary": "Labcorp Global Trial Connect enhances the investigator site experience by providing resources for site enablement, supply readiness, and comprehensive study management.",
+                    "date": "N/A",
+                    "facts": [
+                        "Labcorp Global Trial Connect includes resources for site enablement and support for supply readiness.",
+                        "The suite aims to enhance trial efficiency and streamline workflows at investigator sites."
+                    ],
+                    "source_url": "https://www.clinicaltrialsarena.com/news/labcorp-suite-clinical-trials/"
+                },
+                {
+                    "type": "technology_platform",
+                    "title": "Digital Trials Platform",
+                    "summary": "Labcorp's digital trials platform, acquired from SnapIoT, is a no-code, drag-and-drop system that facilitates decentralized clinical trial workflows.",
+                    "date": "N/A",
+                    "facts": [
+                        "Labcorp's digital trials platform is a no-code, drag-and-drop system acquired from SnapIoT.",
+                        "The platform enables real-time oversight of participant-level trial data through Labcorp’s proprietary Xcellerate Medical Review tool."
+                    ],
+                    "source_url": "https://www.labcorp.com/education-events/articles/technologies-tools-and-processes-support-patient-centric-oncology-trials"
+                },
+                {
+                    "type": "geographic_reach",
+                    "title": "Global Presence and Infrastructure",
+                    "summary": "Labcorp operates a global life sciences company with a significant workforce and extensive laboratory network.",
+                    "date": "N/A",
+                    "facts": [
+                        "Labcorp has over 75,000 employees and serves customers in more than 100 countries.",
+                        "Fortrea, the spun-off unit, will employ roughly 19,000 professionals for Phase I-IV clinical development services."
+                    ],
+                    "source_url": "https://ir.labcorp.com/news-releases/news-release-details/labcorp-unveils-new-name-future-independent-clinical-development"
+                },
+                {
+                    "type": "infrastructure",
+                    "title": "Laboratory Automation and Site Expansions",
+                    "summary": "Labcorp has expanded its global footprint through acquisitions and partnerships, investing in technology and laboratory automation across multiple regions.",
+                    "date": "N/A",
+                    "facts": [
+                        "Labcorp has made key acquisitions such as Envigo CRS and Global Specimen Solutions.",
+                        "Labcorp has invested in laboratory automation and site expansions in North America, Europe, and Asia-Pacific."
+                    ],
+                    "source_url": "https://www.labcorp.com/biopharma/why-work"
+                }
+            ],
+            "vendor_positive_news": null,
+            "vendor_negative_news": null
+        },
+        "positive_news": {
+            "vendor_name": "Labcorp",
+            "vendor_category": "CRO",
+            "question_category": "positive_news",
+            "vendor_capabilities": null,
+            "vendor_positive_news": [
+                {
+                    "type": "acquisition",
+                    "title": "Labcorp closes takeover of Ballad Health outreach laboratory services - MedTech Dive",
+                    "summary": "Labcorp has expanded its hospital-lab network by acquiring Ballad Health's outreach laboratory services, which is part of its strategy to become a preferred partner for health systems.",
+                    "date": "Thu, 12 Dec 2024 16:33:26 GMT",
+                    "facts": [
+                        "Labcorp acquired Ballad Health's outreach laboratory services in December 2024.",
+                        "The acquisition is part of Labcorp's strategy to be a partner of choice for health systems."
+                    ],
+                    "source_url": "https://www.medtechdive.com/news/labcorp-takeover-ballad-health-outreach-lab/735345/"
+                },
+                {
+                    "type": "regulatory_approval",
+                    "title": "Labcorp Achieves IVDR CE-Marking for PGDx elio™ tissue complete in the EU - BioSpace",
+                    "summary": "In July 2025, Labcorp announced that the PGDx elio™ tissue complete test received CE-marking under the EU's new In Vitro Diagnostic Regulation, marking it as the first test of its kind in the EU for comprehensive solid tumor profiling.",
+                    "date": "Wed, 30 Jul 2025 10:32:23 GMT",
+                    "facts": [
+                        "Labcorp's PGDx elio™ tissue complete test received CE-marking in July 2025.",
+                        "This test is the first in the EU for comprehensive solid tumor profiling under the new In Vitro Diagnostic Regulation."
+                    ],
+                    "source_url": "https://www.biospace.com/press-releases/labcorp-achieves-ivdr-ce-marking-for-pgdx-elio-tissue-complete-in-the-eu"
+                },
+                {
+                    "type": "acquisition",
+                    "title": "Labcorp to buy Opko unit’s cancer test assets for up to $225M - MedTech Dive",
+                    "summary": "Labcorp is set to acquire the oncology diagnostics operations from BioReference Health for up to $225 million, further expanding its capabilities in high-growth cancer testing markets.",
+                    "date": "Wed, 12 Mar 2025 15:44:09 GMT",
+                    "facts": [
+                        "In March 2025, Labcorp agreed to acquire the oncology diagnostics operations of BioReference Health for up to $225 million."
+                    ],
+                    "source_url": "https://www.medtechdive.com/news/Labcorp-acquires-cancer-test-Opko-BioReference-Health/742297/"
+                },
+                {
+                    "type": "expansion",
+                    "title": "Labcorp Expands Oncology Portfolio to Improve Patient Care and Advance Cancer Research",
+                    "summary": "In May 2025, Labcorp announced the expansion of its precision oncology portfolio, introducing new test offerings for solid tumors and hematologic malignancies.",
+                    "date": "Fri, 30 May 2025 13:47:16 GMT",
+                    "facts": [
+                        "Labcorp expanded its precision oncology portfolio with new test offerings for solid tumors and hematologic malignancies."
+                    ],
+                    "source_url": "https://www.biospace.com/press-releases/labcorp-expands-oncology-portfolio-to-improve-patient-care-and-advance-cancer-research"
+                },
+                {
+                    "type": "financial_performance",
+                    "title": "Labcorp raises annual profit forecast on strong diagnostic testing demand - Reuters",
+                    "summary": "On July 24, 2025, Labcorp raised its annual profit forecast after reporting a 9.5% increase in quarterly revenue to $3.53 billion, driven by strong demand for its diagnostic services.",
+                    "date": "Thu, 24 Jul 2025 11:00:35 GMT",
+                    "facts": [
+                        "Labcorp's quarterly revenue rose 9.5% to $3.53 billion.",
+                        "The company raised its 2025 adjusted earnings-per-share target to $16.05-$16.50."
+                    ],
+                    "source_url": "https://www.reuters.com/business/healthcare-pharmaceuticals/labcorp-raises-annual-profit-forecast-strong-diagnostic-testing-demand-2025-07-24/"
+                }
+            ],
+            "vendor_negative_news": null
+        },
+        "negative_news": {
+            "vendor_name": "Labcorp",
+            "vendor_category": "CRO",
+            "question_category": "negative_news",
+            "vendor_capabilities": null,
+            "vendor_positive_news": null,
+            "vendor_negative_news": [
+                {
+                    "type": "controversy_or_criticism",
+                    "title": "Quest, Labcorp downplay ‘big beautiful bill’ impact - MedTech Dive",
+                    "summary": "Labcorp executives stated that they expect minimal effects on testing services from the Republican tax and domestic policy bill, which includes cuts to Medicaid. This stance has drawn criticism as observers argue it overlooks the potential negative impact on low-income patients' access to diagnostic tests.",
+                    "date": "2025-07-29",
+                    "facts": [
+                        "Labcorp executives downplayed the impact of the Republican 'big beautiful bill' on testing services.",
+                        "The bill includes cuts to Medicaid, which could limit access to Labcorp's diagnostic tests for low-income patients.",
+                        "Critics argue that Labcorp's remarks were an attempt to reassure investors while ignoring broader healthcare concerns."
+                    ],
+                    "source_url": "https://www.medtechdive.com/news/Labcorp-Quest-Diagnostics-Q2-Medicaid-impact/756173/"
+                },
+                {
+                    "type": "financial_or_staffing_challenge",
+                    "title": "Labcorp posts solid Q3 results but trims full-year revenue forecast",
+                    "summary": "Labcorp reported a modest financial challenge in its third-quarter 2025 update, trimming its full-year revenue guidance while raising its adjusted earnings outlook.",
+                    "date": "2025-10-28",
+                    "facts": [
+                        "Labcorp trimmed its full-year revenue guidance in Q3 2025.",
+                        "Labcorp raised its adjusted earnings outlook to $16.15 to $16.50 per share.",
+                        "The company did not disclose any staffing or broader organizational difficulties."
+                    ],
+                    "source_url": "https://www.fiercebiotech.com/medtech/labcorp-sees-strong-sales-diagnostic-division-lowers-total-growth-guidance"
+                }
+            ]
+        }
+    },
+    "error": null
+}

@@ -1,0 +1,76 @@
+You are an expert in extracting structured information from clinical trial protocols.
+
+## Task ##
+Extract all details of the **Control Arm** (also referred to as “Placebo Arm” or “Comparator Arm”) from the protocol.  
+This section describes the control intervention used for comparison against the investigational (active) treatment.
+
+---
+
+## Field Definition ##
+The **Control Arm** contains information about the comparator treatment, which may be:
+- A placebo
+- An active comparator drug
+- Standard-of-care treatment
+
+It includes dosing, route, timing, duration, and packaging information.
+
+---
+
+## How to Identify (Positive Identification Rules) ##
+Look for section headings, tables, or paragraphs containing:
+- “Control Arm”
+- “Placebo Arm”
+- “Comparator Arm”
+- “Placebo group”
+- “Active comparator”
+- “Arm B” or similar parallel structure
+
+### Common textual cues:
+- “Drug: Matching placebo tablets”
+- “Drug: Comparator drug X”
+- “Dose: One tablet once daily”
+- “Route: Oral administration”
+- “Packaging: Identical bottles and labeling”
+- “n=XXX” (sample size)
+- Appears near or immediately after the Active Treatment Arm section
+
+---
+
+## Extraction Fields ##
+Extract the following fields:
+
+- **arm_type** – Type of control (e.g., “Placebo”, “Active Comparator”)
+- **population_size** – Number of participants (e.g., “n=375”). Don't write extra words in this, it should be as short as possible, only the population size and relative extra words if needed
+- **drug_name** – Name or description of the control drug (e.g., “Matching placebo tablets”)
+- **drug_description** – Details about formulation or appearance (e.g., “Identical to ABC-150 tablets”), the verbatim and text should be same as given in content, don't rephrase it.
+- **dose** – Dosing schedule (e.g., “One tablet once daily”)
+- **route** – Route of administration (e.g., “Oral administration with food”)
+- **timing** – Time or frequency of administration (e.g., “Same time each day”)
+- **duration** – Treatment duration (e.g., “24 weeks of treatment”)
+- **packaging** – Packaging or dispensing information (e.g., “Identical bottles and labeling”)
+
+---
+
+## Exclusion Rules ##
+Do **not** include:
+- Details from the active/experimental arm
+- Background therapy or concomitant medication
+- Extension study arms (unless defined as a control)
+
+---
+
+## Output Format (JSON) ##
+{
+    "arm_type": "<Placebo / Active Comparator>",
+    "population_size": "<n=XXX if available>",
+    "drug_name": "<Drug or placebo name>",
+    "drug_description": "<Short descriptor>",
+    "dose": "<Dose and frequency>",
+    "route": "<Route of administration>",
+    "timing": "<Dosing schedule or timing>",
+    "duration": "<Treatment duration>",
+    "packaging": "<Packaging or dispensing details>"
+}
+
+- Preserve exact units (mg, tablet, capsule) and timing notation (±X hours, daily, weekly).
+- Don't write extra text wherever not needed, and each field should have same verbatim and text present in content, don't rephrase it.

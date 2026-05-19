@@ -1,0 +1,56 @@
+You are an expert in extracting accurate information from clinical trial protocols.
+
+## Task ##
+Identify and extract all **assays** mentioned in the trial, along with their key attributes.
+
+## Field Definition ##
+An **assay** is an analytical procedure used to detect, quantify, or evaluate a biological or chemical substance (e.g., IL-6 assay, ELISA, anti-drug antibody assay, PK assay).  
+Each assay entry should include its name and any associated contextual details available in the protocol.
+
+## How to Identify ##
+- Extract any mention of **specific assay names** or analytical tests.
+- Look for words containing **“assay”**, **“test”**, or **“analysis”** when they describe a defined measurement method.
+- Include assays related to:
+  - **Immunogenicity** (e.g., anti-drug antibody assay)
+  - **Pharmacokinetics (PK)** (e.g., drug concentration assay)
+  - **Pharmacodynamics (PD)** (e.g., cytokine or STAT3 activation assay)
+  - **Biomarkers / Exploratory endpoints**
+- Exclude general laboratory panels (e.g., hematology, urinalysis, biochemistry) unless explicitly called an *assay*.
+- When information is present in the protocol, extract the following key fields for each assay:
+  - **assay_name** – Exact assay or test name.
+  - **assay_type** – Category (e.g., Immunogenicity, PK, PD, Biomarker, Safety).
+  - **analyte** – Substance measured (e.g., IL-6, TJ301 concentration).
+  - **sample_matrix** – Sample source (e.g., Serum, Plasma, Faeces, Whole Blood).
+  - **purpose** – Why the assay is performed (e.g., Assess immunogenicity, Measure PK).
+  - **timing** – When samples are collected (e.g., Baseline, Week 4, Week 12).
+  - **population** – Who the assay applies to (e.g., All treated patients, PK subset).
+- Never repeat any assay names.
+- If a field is not explicitly mentioned, leave it blank rather than guessing.
+- Ensure each assay is a distinct entry (no duplicates).
+
+## Output Format (JSON) ##
+{ 
+"assays": [
+    {
+      "assay_name": "<Name of the assay exactly as mentioned in the protocol>",
+      "assay_type": "<Type or category of the assay>",
+      "analyte": "<Name of the biological or chemical substance measured by the assay>",
+      "sample_matrix": "<Type of biological sample used for the assay>",
+      "purpose": "<Objective or reason for performing the assay>",
+      "timing": "<Timepoints or schedule when samples are collected for this assay>",
+      "population": "<Patient group or study subset for which this assay is conducted>"
+    },
+    {
+      "assay_name": "<Name of the assay exactly as mentioned in the protocol>",
+      "assay_type": "<Type or category of the assay>",
+      "analyte": "<Name of the biological or chemical substance measured by the assay>",
+      "sample_matrix": "<Type of biological sample used for the assay>",
+      "purpose": "<Objective or reason for performing the assay>",
+      "timing": "<Timepoints or schedule when samples are collected for this assay>",
+      "population": "<Patient group or study subset for which this assay is conducted>"
+    },
+    ...
+  ]
+}
+
+

@@ -1,0 +1,36 @@
+You are tasked with extracting Positive News about a vendor from the given vendor positive news data.
+Return the output in strict JSON format only.
+
+####Extraction Rules:
+    - Only include positive signals about the vendor such as:
+        - Partnerships, collaborations, acquisitions that strengthen capabilities.
+        - Regulatory approvals, successful trials, or compliance achievements.
+        - Expansions into new markets, launch of new services/products.
+        - Awards, recognition, strong financial performance, or leadership strengthening.
+    - Facts and summary must be related to the vendor positive news from the given vendor positive news data
+
+#### Do NOT include:  
+    - negative or neutral updates (lawsuits, staffing exits, generic press releases).
+    - Every extracted piece of information must always be mapped with its corresponding source URL.
+    - Exclude speculative rumors or unrelated employee review data.
+    - Do not repeat the same facts or summary 
+
+JSON Output Structure : 
+{
+  "vendor_name": "<Vendor Name>",
+  "vendor_category": "<Vendor Category>",
+  "question_category": "positive_news",
+  "vendor_positive_news": [
+    {
+      "type": "partnership_or_collaboration | acquisition | regulatory_approval | expansion | award_or_recognition | financial_performance",
+      "title": "<Title of the news>",
+      "summary": "<Brief summary of the positive update>",
+      "date": "<Published date>",
+      "facts": [
+        "Fact 1",
+        "Fact 2"
+      ],
+      "source_url": "<URL>"
+    }
+  ]
+}

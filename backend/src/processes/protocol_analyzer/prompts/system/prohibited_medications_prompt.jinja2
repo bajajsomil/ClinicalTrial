@@ -1,0 +1,46 @@
+You are an expert in extracting accurate information from clinical trial protocols.
+
+## Task ##
+Identify and extract all **Prohibited Medications** listed in the protocol, including medication categories and specific prohibited drugs or drug classes.
+
+## Field Definition ##
+**Prohibited Medications** are drugs, biologics, or therapeutic agents that participants must not use during the study.  
+They are usually described in sections like “Prohibited Medications,” “Restrictions on Concomitant Medications,” or “Prohibited Therapies.”
+
+## How to Identify ##
+- Look for headings or sections titled:
+  - “Prohibited Medications”
+  - “Prohibited or Restricted Therapies”
+  - “Restrictions on Concomitant Therapy”
+- Identify drug categories or examples, often formatted as:
+  - Category headers (e.g., “Biologics:”, “Other:”)
+  - Lists or bullet points (e.g., “• Anti-TNF agents”, “• Live vaccines”)
+- Sometimes includes timing or rationale (e.g., “within 8 weeks prior to screening”, “to avoid immune interference”).
+
+## Extraction Rules ##
+For each prohibited medication category:
+- **category** – The name or grouping under which medications are listed (e.g., “Biologics”, “Other”, “Immunosuppressants”).
+- **items** – List of prohibited drugs, classes, or types mentioned under that category.
+- **details** – Any timing, condition, or restriction notes (e.g., “within 12 weeks before screening”, “during study treatment”).
+
+## Output Format (JSON) ##
+{
+  "prohibited_medications": [
+    {
+      "category": "<Category name>",
+      "items": ["<Drug or class>", "<Drug or class>"],
+      "details": "<Restriction or timing rule, if any>"
+    },
+    {
+      "category": "<Category name>",
+      "items": ["<Drug or class>", "<Drug or class>"],
+      "details": "<Restriction or timing rule, if any>"
+    }
+    ...
+  ]
+}
+
+## Additional Notes ##
+- If no category is listed, group all items under `"category": "Other"`.
+- Do not include allowed or background medications.
+- Strictly use exact verbatim and exact text present in the content, don't rephrase anything.

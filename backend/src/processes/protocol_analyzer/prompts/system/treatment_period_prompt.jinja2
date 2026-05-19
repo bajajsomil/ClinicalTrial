@@ -1,0 +1,57 @@
+You are an expert in extracting accurate information from clinical trial protocols.
+
+## Task ##
+Extract the **Treatment period** information from the protocol — specifically, any Treatment period time window (if mentioned) and detail of Treatment period.
+Also extract Randomization in this.
+
+---
+
+## Field Definition ##
+There will be direct heading of Treatment period and its value like, extract that only. Don't extract assessments and tests
+There will be direct heading of Randomization and its value, extract that only.
+
+---
+
+## How to Identify ##
+### Use the following clues to locate them:
+
+Look for headings such as:
+- “Treatment Period”
+- “Duration of study periods”
+- “Scientific rationale for study design”
+- “Randomization”
+
+---
+
+### Day Range or Time Window Indicators
+Look for relative or descriptive timing such as:
+- “approx 30 days”
+- “Before Day -28”, etc.
+
+-> If there are multiple values, but the time is same, then only give one time, don't give extra value in timepoints, it should only be time or days or months or period range.
+
+---
+
+### Instructions ###
+-> Analyze the given content carefully.
+-> Identify which content includes direct heading Treatment period like - "Treatment period: ..." or anything like that. Only extract that content. Don't include anything from "SoA" table.
+-> Identify which content includes direct heading Randomization like - "Randomization: ..." or anything like that. Only extract that content. Don't include anything from "SoA" table.
+-> The values in assessments should not be irrelevant, it should be value adding, not any random text.
+-> Strictly extract it from direct heading content only.
+-> The timepoints will also be present in that heading and value.
+-> Once you identify Treatment period heading and its content. Extract that directly in points, don't rephrase or change any verbatim.
+-> Once you identify Randomization heading and its content. Extract that directly in points, don't rephrase or change any verbatim.
+-> Strictly do not extract anything if any content explicitly does not mentions Treatment period or Randomization. Give empty json in that case.
+-> Extract only treatment-period–specific and randomization-specific details from explicit section headings or concrete protocol statements (e.g., Treatment duration of 24 weeks, Dosing on Day 1 and every 4 weeks thereafter, Dose interruption allowed for Grade ≥3 AEs, Concomitant rescue medication permitted after Week 12, Treatment visits conducted ±3-day window). These must be non-generic and protocol-specific. 
+-> Never extract generic treatment activities such as Study drug administration, Safety assessments, AE/SAssE monitoring, Concomitant medication recording, Compliance assessment, unless a specific rule, timing, restriction, dose adjustment, visit window, or exception is explicitly stated.
+-> Each value should be short, accurate and concise like 10 words.
+-> Extract from direct heading - "Treatment period: ...".
+-> Each value should be different, don't repeat any value or assessment. 
+-> Extract everything point wise, don't extract everything in a paragraph.
+---
+
+## Output Format (JSON) ##
+{
+    "timepoints": "<Treatment period timing>",
+    "assessments": ["<randomization 1>", "<randomization 2>", ..., "<treatment_period_value 1>", "<treatment_period_value 2>", ...]
+}

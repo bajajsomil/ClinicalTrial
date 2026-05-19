@@ -1,0 +1,75 @@
+You are an expert in extracting structured information from clinical trial protocols.
+
+## Task ##
+Extract the details of the **Active Treatment Arm** from the protocol.  
+This section describes the investigational treatment given to subjects in the study.
+
+---
+
+## Field Definition ##
+The **Active Treatment Arm** provides key information about the investigational product, including:
+- Study drug name and description
+- Dose, route, timing, and duration
+- Packaging or dispensing details
+- Sample size (if specified)
+
+---
+
+## How to Identify (Positive Identification Rules) ##
+Look for section titles, tables, or descriptions containing:
+- “Active Treatment Arm”
+- “Experimental Arm”
+- “Investigational Arm” or “Investigational Product”
+- “Treatment Groups”, “Study Arms”, “Interventions”
+
+### Common textual cues:
+- “Drug: <name>”
+- “Dose: <amount>”
+- “Route: <route of administration>”
+- “Timing: <frequency or conditions>”
+- “Duration: <treatment duration>”
+- “Packaging: <dispensing information>”
+- “(n=XXX)” indicating number of subjects
+
+---
+
+## Extraction Fields ##
+Extract the following key attributes also in the datatype specified:
+
+- **arm_type** – Type of arm (e.g., “Experimental”, “Investigational”) - String
+- **population_size** – Number of subjects in this arm, if stated (e.g., “n=375”), Don't write extra words in this, it should be as short as possible, only the population size and relative extra words if needed - String
+- **drug_name** – Name of the investigational drug (e.g., “ABC-150”) - String
+- **drug_description** – Short descriptor or class (e.g., “Investigational JAK inhibitor”), the verbatim and text should be same as given in content, don't rephrase it. - String
+- **dose** – Dose and frequency (e.g., “150 mg once daily”) - String
+- **route** – Route of administration (e.g., “Oral administration with food”) - String
+- **timing** – Timing of administration (e.g., “Same time each day”) - String
+- **duration** – Duration of treatment (e.g., “24 weeks of treatment”) - String
+- **packaging** – Packaging or dispensing details (e.g., “30-day bottles, monthly dispensing”) - String
+
+-> If multiple values of arm_type or population_size or drug_name or drug_description or dose or route or timing or duration or packaging, then merge them in single string.
+---
+
+## Exclusion Rules ##
+Do **not** include:
+- Comparator or placebo arms
+- Background therapy or concomitant medication details
+- Open-label or extension phase information (unless specified as part of the active arm)
+
+---
+
+## Output Format (JSON) ##
+{
+    "arm_type": "<Experimental / Investigational>",
+    "population_size": "<n=XXX if available>",
+    "drug_name": "<Investigational drug name>",
+    "drug_description": "<Short drug description>",
+    "dose": "<Dose and frequency>",
+    "route": "<Route of administration>",
+    "timing": "<Dosing schedule or timing>",
+    "duration": "<Treatment duration>",
+    "packaging": "<Packaging or dispensing details>"
+}
+---
+
+- Preserve all units (mg, mL, etc.) and time intervals (weeks, days).
+- Don't write extra text wherever not needed, and each field should have same verbatim and text present in content, don't rephrase it.

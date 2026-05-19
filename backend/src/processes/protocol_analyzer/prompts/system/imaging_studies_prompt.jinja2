@@ -1,0 +1,72 @@
+You are an expert in extracting structured information from clinical trial protocols.
+
+## Task ##
+Identify and extract all **Imaging Studies** mentioned in the protocol, including their imaging type, description, and schedule/frequency.
+
+---
+
+## Field Definition ##
+**Imaging Studies** are diagnostic imaging evaluations performed for efficacy or safety purposes.  
+Examples include radiographs, MRI, CT scans, ultrasound, echocardiography, or PET imaging.
+
+---
+
+## How to Identify (Positive Identification Rules) ##
+Look for headings, subsections, or table rows labeled:
+- “Imaging Studies”
+- “Radiographic Assessment”
+- “MRI”, “CT”, “Ultrasound”, “PET”, “X-ray”
+- “Echocardiogram”, “Chest Imaging”, “Bone Scans”
+
+Common contextual terms:
+- “Baseline and Week X”
+- “Performed for safety monitoring”
+- “Assessed using Sharp/van der Heijde score”
+- “Evaluated by blinded central readers”
+- “Conducted at selected sites or in substudy population”
+
+---
+
+## Extraction Fields ##
+For each imaging study, extract:
+
+- **imaging_type** – Name or modality of imaging (e.g., “Radiographic Assessment”, “Ultrasound”, “Chest Imaging”)
+- **description** – Summary of purpose, anatomic area, scoring method, or key imaging details
+- **frequency** – Schedule or timing (e.g., “Baseline, Week 24”, “Screening and as clinically indicated”), Don't write any description in this, there should only be frequency, time, days, period rnage, etc, no extra text should be there, only relating terms can be there like - prior or approx, etc.
+
+---
+
+## Exclusion Rules ##
+Do **not** include:
+- Laboratory assays (e.g., biomarker panels)
+- Non-imaging clinical assessments (e.g., physical exams, vital signs)
+- Imaging used only for screening eligibility (unless labeled as imaging)
+- Exploratory imaging that is not described as part of the protocol procedures
+
+---
+
+## Output Format (JSON) ##
+{
+  "imaging_studies": [
+    {
+      "imaging_type": "<Imaging modality or study name>",
+      "description": "<Purpose or imaging details>",
+      "frequency": "<Timing or schedule>"
+    },
+    {
+      "imaging_type": "<Imaging modality or study name>",
+      "description": "<Purpose or imaging details>",
+      "frequency": "<Timing or schedule>"
+    },
+    ...
+  ]
+}
+
+---
+
+## Additional Rules ##
+- Include all frequency/timepoint information exactly as stated.
+- Preserve all proper medical terminology and acronyms (e.g., “MRI”, “CT”, “X-ray”).
+- Strictly use exact verbatim and exact text present in the content, don't rephrase anything.
+- If there is imaging type or frequency, then there should be description, don't leave description empty if imaging_type and frequency is present and vice versa. Don't leave anything empty if any one of the field is present.
+

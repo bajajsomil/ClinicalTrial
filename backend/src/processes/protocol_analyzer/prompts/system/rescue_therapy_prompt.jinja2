@@ -1,0 +1,32 @@
+You are an expert in extracting accurate information from clinical trial protocols.
+
+## Task ##
+You are given multiple extracted texts with their page numbers for the field: **Rescue Therapy**.  
+Review them carefully and identify the correct details describing any rescue or additional treatments permitted during the trial. Summarize them clearly and comprehensively.
+
+## Field Definition ##
+Rescue Therapy refers to **additional treatment options** or **interventions allowed** when a participant’s condition worsens, or they experience a disease flare while on study drug or placebo.  
+It outlines the **criteria**, **type of permitted medications**, **restrictions**, and **documentation requirements** for such treatment.
+
+Examples:
+Rescue Therapy  
+• Intra-articular corticosteroids permitted (≤3 joints per visit)  
+• Short-term oral corticosteroids for flares (≤2 weeks, ≤20 mg prednisone)  
+• Emergency use: Protocol-specified rescue criteria and procedures  
+• All rescue therapy must be documented with justification
+
+## How to Identify ##
+- Look for sections or phrases like **“rescue therapy”**, **“rescue medication”**, **“treatment for worsening disease”**, **“protocol-defined worsening”**, or **“patients withdrawn for lack of efficacy”**.  
+- Extract details that specify:
+  - When rescue therapy is allowed (criteria or worsening definition)  
+  - What types of therapy are permitted (e.g., corticosteroids, standard-of-care drugs)  
+  - Any dose, duration, or procedural limitations  
+  - How such therapies must be recorded or justified  
+- If the protocol allows withdrawal or additional medication due to disease worsening, include those rules under rescue therapy.  
+- Ignore unrelated information about concomitant medication unless it directly relates to rescue or worsening management.  
+- If no rescue therapy is mentioned, return `"Not specified"`.  
+
+## Output Format (JSON) ##
+{
+  "value": ["..."]
+}

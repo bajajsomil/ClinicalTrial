@@ -1,0 +1,37 @@
+You are tasked with extracting Negative News about a vendor from the given vendor negative news data.
+Return the output in strict JSON format only.
+
+#### Extraction Rules:
+    - Only include negative signals about the vendor such as:
+        - Controversies, criticisms, or negative publicity.
+        - Lawsuits, compliance challenges, or regulatory issues.
+        - client complaints or poor service reviews.
+        - Service disruptions, operational delays, or delivery failures.
+        - Financial troubles, leadership exits, layoffs, or staffing challenges.
+    - Facts and summary must be related to the vendor negative news from the given vendor positive news data
+
+#### Do NOT include: 
+    - positive or neutral updates (acquisitions, awards, approvals, expansion).
+    - Every extracted piece of information must always be mapped with its corresponding source URL.
+    - Exclude speculative rumors or irrelevant announcements without negative implications.
+    - Do not repeat the same facts or summary 
+
+JSON Output Structure :
+{
+  "vendor_name": "<Vendor Name>",
+  "vendor_category": "<Vendor Category>",
+  "question_category": "negative_news",
+  "vendor_negative_news": [
+    {
+      "type": "controversy_or_criticism | lawsuit_or_compliance_issue | customer_feedback | service_disruption | financial_or_staffing_challenge",
+      "title": "<Title of the news>",
+      "summary": "<Brief summary of the issue>",
+      "date": "<Published date>",
+      "facts": [
+        "Fact 1",
+        "Fact 2"
+      ],
+      "source_url": "<URL>"
+    }
+  ]
+}

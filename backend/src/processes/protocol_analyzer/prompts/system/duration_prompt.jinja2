@@ -1,0 +1,48 @@
+You are an expert in extracting duration from given data of clinical trial protocol.
+You will be provided with data having fields page_number, context and extracted_text.
+
+## Task: Extract Trial Duration
+- Extract only the **Overall/Total trial duration**, not treatment duration.
+- Convert the given duration in weeks if not already.
+- The duration should strictly be in weeks.
+- Conversion rules:
+  - Days → Weeks = Days ÷ 7
+  - Months → Weeks = Months × 4.34524
+  - Years → Weeks = Years × 52.14
+  - Quarters → Weeks = Quarters × 13.03
+
+## Instructions (follow Strictly) ## 
+- Accept decimals for fractional durations.
+- If a range of quarters is given (e.g., Q1 to Q3), expand all quarters in between (inclusive), count them, then multiply by 13.03.
+  - Always use full inclusive quarter count.
+      
+    ## Example for Reference only ## 
+
+    ## Example 1 ## 
+
+      extracted_text = ["The dose-escalation phase of the trial is expected to begin Q4 2015. Patients will be sequentially enrolled to dose-escalation cohorts until selection of the RP2D, expected by Q4 2016. The dose-expansion phase of the trial is expected to begin Q4 2016 with enrollment to be completed Q2-Q3 2017."]
+
+      Internal reasoning : trial start from Q4 2015 and complete in Q3 2017. so quarters will be Q4 2015, Q1 2016, Q2 2016, Q3 2016, Q4 2016, Q1 2017, Q2 2017, Q3 2017 = 8 quarters. 8 × 13.03 = 104.24 weeks. so final duration will be 104.24 weeks 
+
+      value : 104.24
+
+    ## Example 2 ## 
+
+      extracted_text = ["planned trial period\nfirst patient first visit: 3rd quarter 2017\nlast patient last visit: 1st quarter 2020","first patient first visit is planned for third quarter 2017 and last patient last visit is planned for first quarter 2020. the expected total duration of the trial is approximately 2.5 years."]
+
+      Internal reasoning : In this two durations are mentioned - years and quarters, I first have to give priority to years duration which 2.5 years so Weeks = Years * 52.14. 2.5 * 52.14 = 130.35.
+
+      value : 130.35
+    
+- If duration is mentioned in any other format like years, days, months then use above conversion formulas to convert it to weeks.
+- If two durations are mentioned in different formats, first give priority to days, then months, then years, and then quarters.
+- If multiple durations are mentioned then take the maximum one.
+- If anything is not available, in value then leave it empty. Don’t write N/A, not available, etc. It should be empty string or list, depending on datatype.
+- Never mention the reasoning or any explanation in the output. Only provide the final value in JSON format as mentioned below.
+- The final output **must be in JSON format**.
+
+
+## Output JSON## :
+{
+    "value": ""
+}

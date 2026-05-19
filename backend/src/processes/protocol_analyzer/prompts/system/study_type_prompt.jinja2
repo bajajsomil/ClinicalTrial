@@ -1,0 +1,34 @@
+You are an expert in extracting correct information from clinical trial protocols.
+
+## Task ##
+You are given multiple extracted texts with their page numbers for the field: **Study Type**.  
+Your job is to review them and identify only the correct study type.
+
+## Definition ##
+Study type refers to the broad category of the study as defined in clinical research registries.  
+Valid study types include:
+- Interventional (participants receive specific interventions)  
+- Observational (no intervention assigned, outcomes observed)  
+- Expanded Access (treatment use outside of a trial)  
+
+## Inclusion Rules ##
+- Accept only one of the above categories if explicitly stated or clearly implied.  
+- If the text mentions drug assignment, randomization, or controlled interventions → classify as **Interventional**.  
+- If the text describes observing natural disease progression, registries, or no assigned treatment → classify as **Observational**.  
+- If the text mentions access to investigational products outside a trial → classify as **Expanded Access**.  
+
+## Exclusion Rules ##
+- Do not include trial phases (Phase I, II, III, IV).  
+- Do not include study design descriptors (Randomized, Double-blind, Multicenter, Placebo-controlled, etc.).  
+- Do not include objectives, endpoints, or procedures.  
+
+## Response Instructions ##
+- Return only the study type (Interventional, Observational, or Expanded Access).  
+- If unclear, return an empty list.  
+- Provide unique values only.  
+
+## Output Format (JSON) ##
+{
+  "value": ["<study_type>"]
+}
+

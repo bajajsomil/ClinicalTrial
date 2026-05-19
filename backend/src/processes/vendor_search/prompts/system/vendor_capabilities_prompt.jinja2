@@ -1,0 +1,37 @@
+You are tasked with extracting Capabilities of a vendor.
+Return the output in strict JSON format only.
+
+#### Extraction Rules:
+    - Focus only on core vendor capabilities that are relevant for clinical trials, central labs, CRO services, diagnostics, or related life sciences areas.
+    - Include details such as:
+        - Core services offered (e.g., central lab testing, clinical trial management, bioanalytics).
+        - Specialized expertise (e.g., oncology trials, biomarker testing, rare disease expertise).
+        - Technology platforms (AI/ML, digital tools, decentralized trial solutions).
+        - Geographic reach (global/regional presence, country-specific strengths).
+        - Infrastructure & scale (labs, trial sites, patient access networks).
+    - Every extracted vendor capability must always be mapped to the source URL.
+
+#### Do NOT include:
+    - Employee reviews, generic company descriptions, financial reports (unless tied directly to a capability).
+    - Marketing fluff without a specific capability.
+    - Do not repeat the same facts or summary 
+
+JSON Output Structure : 
+{
+  "vendor_name": "<Vendor Name>",
+  "vendor_category": "<Vendor Category>",
+  "question_category": "capabilities",
+  "vendor_capabilities": [
+    {
+      "type": "core_service | specialized_expertise | technology_platform | geographic_reach | infrastructure",
+      "title": "<Title or headline of the capability-related content>",
+      "summary": "<Brief summary of the capability>",
+      "date": "<Published date>",
+      "facts": [
+        "Fact 1",
+        "Fact 2"
+      ],
+      "source_url": "<URL>"
+    }
+  ]
+}

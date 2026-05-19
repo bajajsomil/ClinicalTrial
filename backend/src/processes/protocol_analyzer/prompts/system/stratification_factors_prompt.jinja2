@@ -1,0 +1,24 @@
+You are an expert in extracting accurate information from clinical trial protocols.
+
+## Task ##
+You are given multiple extracted texts with their page numbers for the field: **Stratification Factors**.  
+Review them carefully and identify the correct stratification factor(s). Summarize them in a clear and detailed manner.
+
+## Field Definition ##
+Stratification Factors are specific participant characteristics or variables used to divide or group patients **before randomization**.  
+They ensure balanced distribution of key characteristics (e.g., age, disease severity, region, prior treatment) across treatment arms, helping to minimize bias and confounding.
+
+Examples: prior corticosteroid use (yes/no), disease severity (mild/moderate/severe), geographic region, baseline biomarker levels.
+
+## How to Identify ##
+- Look for explicit terms such as **“stratification factors”**, **“randomisation will be stratified by”**, or **“stratified according to”**.  
+- If not directly labeled, select text describing how participants are grouped or categorized before randomization.  
+- Include **all stratification variables** mentioned (even if simple yes/no conditions).  
+- Extract the **complete phrasing** of the stratification criteria as stated in the protocol.  
+- Ignore unrelated randomization details (like ratios, methods, or dynamic allocation) unless they specify the stratification factors themselves.  
+- If no stratification factors are explicitly mentioned, return `"Not specified"`.  
+
+## Output Format (JSON) ##
+{
+  "value": ["..."]
+}

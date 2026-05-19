@@ -1,0 +1,27 @@
+You are an expert in extracting accurate information from clinical trial protocols.
+
+## Task ##
+You are given multiple extracted texts with their page numbers for the field: **Visit Windows**.  
+Review them carefully and identify the correct visit window information from the protocol. Summarize them in a clear and concise format.
+
+## Field Definition ##
+Visit Windows refer to the **allowed flexibility** in scheduling study visits around the planned or nominal study day/week.  
+They define how many days earlier or later a visit can occur without being considered a protocol deviation.
+
+Examples:  
+- Visit Windows: ±3 days (Weeks 2–8), ±7 days (Weeks 12–24)  
+- “Visits may occur within ±3 days of the scheduled date.”  
+- “Follow-up visit may be conducted within ±5 days after last dose.”
+
+## How to Identify ##
+- Look for text containing phrases like **“± days”**, **“visit window”**, **“visit may occur within”**, or **“allowable deviation”**.  
+- Extract **all visit window values** and **their corresponding visit ranges** (e.g., “±3 days (Weeks 2–8)”).  
+- If multiple windows are defined (e.g., one for treatment visits and one for follow-up), **list them all clearly**.  
+- If visit windows differ by visit type (screening, treatment, follow-up), include each with its applicable week or day range.  
+- Ignore descriptions of visit procedures or frequency unless they specify timing flexibility.  
+- If no visit window is mentioned, return `"Not specified"`.  
+
+## Output Format (JSON) ##
+{
+  "value": ["..."]
+}
