@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Clinical Intelligence Color System */
+    --background: 210 20% 96%;
+    --foreground: 214 50% 19%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 214 50% 19%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 50% 19%;
+
+    /* Primary - Royal Azure Blue (Intelligence & Trust) */
+    --primary: 214 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 214 100% 65%;
+    
+    /* Secondary - Teal (Modern Scientific) */
+    --secondary: 189 100% 43%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Accent - Sky Blue (Highlights) */
+    --accent: 214 100% 65%;
+    --accent-foreground: 214 50% 19%;
+
+    /* Muted */
+    --muted: 210 20% 96%;
+    --muted-foreground: 214 20% 50%;
+
+    /* Positive - Green (Success signals) */
+    --positive: 152 52% 46%;
+    --positive-foreground: 0 0% 100%;
+
+    /* Negative - Coral Red (Warnings) */
+    --negative: 9 100% 59%;
+    --negative-foreground: 0 0% 100%;
+
+    /* Warning - Yellow (Changes) */
+    --warning: 45 100% 51%;
+    --warning-foreground: 214 50% 19%;
+
+    /* Borders & Inputs */
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 214 100% 40%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(214 100% 40%), hsl(189 100% 43%));
+    --gradient-glow: linear-gradient(135deg, hsl(214 100% 65% / 0.2), hsl(189 100% 43% / 0.2));
+
+    /* Shadows */
+    --shadow-card: 0 2px 8px hsl(214 50% 19% / 0.08);
+    --shadow-card-hover: 0 8px 24px hsl(214 50% 19% / 0.12);
+    --shadow-glow: 0 0 32px hsl(214 100% 65% / 0.3);
+
+    /* Glassmorphism */
+    --glass-bg: hsl(0 0% 100% / 0.7);
+    --glass-border: hsl(214 100% 65% / 0.2);
+
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 214 50% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 214 45% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 214 45% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 214 100% 65%;
+    --primary-foreground: 214 50% 8%;
+    --primary-light: 214 100% 75%;
+
+    --secondary: 189 100% 50%;
+    --secondary-foreground: 214 50% 8%;
+
+    --accent: 214 100% 70%;
+    --accent-foreground: 214 50% 8%;
+
+    --muted: 214 40% 15%;
+    --muted-foreground: 214 20% 65%;
+
+    --positive: 152 52% 50%;
+    --positive-foreground: 214 50% 8%;
+
+    --negative: 9 100% 62%;
+    --negative-foreground: 214 50% 8%;
+
+    --warning: 45 100% 55%;
+    --warning-foreground: 214 50% 8%;
+
+    --border: 214 40% 18%;
+    --input: 214 40% 18%;
+    --ring: 214 100% 65%;
+
+    --shadow-card: 0 2px 8px hsl(0 0% 0% / 0.3);
+    --shadow-card-hover: 0 8px 24px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 32px hsl(214 100% 65% / 0.4);
+
+    --glass-bg: hsl(214 45% 12% / 0.7);
+    --glass-border: hsl(214 100% 65% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Glassmorphic card style */
+  .glass-card {
+    @apply bg-card/70 backdrop-blur-xl border border-primary/20 shadow-[0_2px_8px_hsl(var(--primary)/0.08)];
+  }
+
+  /* Glow effect for interactive elements */
+  .glow-on-hover {
+    @apply transition-all duration-300 hover:shadow-[0_0_32px_hsl(var(--primary-light)/0.3)];
+  }
+
+  /* Neural network animation */
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.05);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
