@@ -259,6 +259,7 @@ resource frontend 'Microsoft.Web/sites@2022-09-01' = {
   properties: {
     serverFarmId: asp_frontend.id
     publicNetworkAccess: publicNetworkAccess
+    scmPublicNetworkAccess: 'Enabled'
     siteConfig: {
       alwaysOn: true
       linuxFxVersion: 'NODE|20-lts'

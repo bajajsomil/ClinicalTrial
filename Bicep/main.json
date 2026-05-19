@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "11268511803312198392"
+      "templateHash": "9069898148304740390"
     }
   },
   "parameters": {
@@ -72,7 +72,7 @@
     },
     "lawName": {
       "type": "string",
-      "defaultValue": "[format('{0}-log', parameters('baseName'))]",
+      "defaultValue": "[format('{0}-law', parameters('baseName'))]",
       "metadata": {
         "description": "The name of the Log Analytics Workspace"
       }
@@ -86,7 +86,7 @@
     },
     "backendAppName": {
       "type": "string",
-      "defaultValue": "[format('{0}-api', parameters('baseName'))]",
+      "defaultValue": "[format('{0}-capp', parameters('baseName'))]",
       "metadata": {
         "description": "The name of the Container App (Backend API)"
       }
@@ -100,7 +100,7 @@
     },
     "frontendAppName": {
       "type": "string",
-      "defaultValue": "[format('{0}-ui', parameters('baseName'))]",
+      "defaultValue": "[format('{0}-webapp', parameters('baseName'))]",
       "metadata": {
         "description": "The name of the Frontend App Service Web App"
       }
@@ -886,7 +886,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "6949870984087149189"
+              "templateHash": "4875530433079728236"
             }
           },
           "parameters": {
@@ -1205,6 +1205,7 @@
               "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('aspName'))]",
                 "publicNetworkAccess": "[parameters('publicNetworkAccess')]",
+                "scmPublicNetworkAccess": "Enabled",
                 "siteConfig": {
                   "alwaysOn": true,
                   "linuxFxVersion": "NODE|20-lts",
