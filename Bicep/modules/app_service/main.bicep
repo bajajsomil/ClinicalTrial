@@ -259,6 +259,7 @@ resource frontend 'Microsoft.Web/sites@2022-09-01' = {
   properties: {
     serverFarmId: asp_frontend.id
     publicNetworkAccess: publicNetworkAccess
+    #disable-next-line BCP037
     scmPublicNetworkAccess: 'Enabled'
     siteConfig: {
       alwaysOn: true

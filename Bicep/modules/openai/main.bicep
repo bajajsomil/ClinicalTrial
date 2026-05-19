@@ -123,14 +123,9 @@ resource gpt4oMini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01'
 Private Endpoint (Optional)
 ========================================
 */
-#disable-next-line no-unnecessary-dependson
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-04-01' = if (!empty(subnetId)) {
   name: 'openai-private-endpoint'
   location: location
-
-  dependsOn: [
-    openai
-  ]
 
   properties: {
     subnet: {
