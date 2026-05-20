@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "16825841883721437765"
+      "templateHash": "14249265878642010558"
     }
   },
   "parameters": {
@@ -159,7 +159,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "12248210038049649429"
+              "templateHash": "13115513712131149133"
             }
           },
           "parameters": {
@@ -187,7 +187,7 @@
               "properties": {
                 "addressSpace": {
                   "addressPrefixes": [
-                    "10.0.0.0/22"
+                    "10.0.0.0/21"
                   ]
                 },
                 "subnets": [
@@ -212,15 +212,7 @@
                     "properties": {
                       "addressPrefix": "10.0.1.0/24",
                       "privateEndpointNetworkPolicies": "Disabled",
-                      "privateLinkServiceNetworkPolicies": "Enabled",
-                      "delegations": [
-                        {
-                          "name": "appservice-delegation",
-                          "properties": {
-                            "serviceName": "Microsoft.Web/serverFarms"
-                          }
-                        }
-                      ]
+                      "privateLinkServiceNetworkPolicies": "Enabled"
                     }
                   },
                   {
@@ -237,6 +229,22 @@
                       "addressPrefix": "10.0.3.0/24",
                       "privateEndpointNetworkPolicies": "Disabled",
                       "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  },
+                  {
+                    "name": "integration-subnet",
+                    "properties": {
+                      "addressPrefix": "10.0.4.0/26",
+                      "privateEndpointNetworkPolicies": "Disabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled",
+                      "delegations": [
+                        {
+                          "name": "appservice-delegation",
+                          "properties": {
+                            "serviceName": "Microsoft.Web/serverFarms"
+                          }
+                        }
+                      ]
                     }
                   }
                 ]
@@ -329,6 +337,10 @@
             "acaEnvSubnetId": {
               "type": "string",
               "value": "[format('{0}/subnets/aca-env-subnet', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
+            },
+            "integrationSubnetId": {
+              "type": "string",
+              "value": "[format('{0}/subnets/integration-subnet', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
             },
             "dnsZoneIdApp": {
               "type": "string",
@@ -1037,6 +1049,9 @@
           "acaEnvSubnetId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.acaEnvSubnetId.value]"
           },
+          "integrationSubnetId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.integrationSubnetId.value]"
+          },
           "dnsZoneId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.dnsZoneIdApp.value]"
           },
@@ -1096,7 +1111,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "16903260539862048739"
+              "templateHash": "3192312531163249961"
             }
           },
           "parameters": {
@@ -1112,6 +1127,13 @@
               "defaultValue": "",
               "metadata": {
                 "description": "Optional: Subnet ID to deploy a private endpoint for the Frontend App Service"
+              }
+            },
+            "integrationSubnetId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Subnet ID to deploy the VNet integration for the Frontend App Service"
               }
             },
             "acaEnvSubnetId": {
@@ -1434,7 +1456,7 @@
               "location": "[parameters('location')]",
               "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('aspName'))]",
-                "virtualNetworkSubnetId": "[if(not(empty(parameters('subnetId'))), parameters('subnetId'), null())]",
+                "virtualNetworkSubnetId": "[if(not(empty(parameters('integrationSubnetId'))), parameters('integrationSubnetId'), null())]",
                 "publicNetworkAccess": "[if(not(empty(parameters('deployerIp'))), 'Enabled', parameters('publicNetworkAccess'))]",
                 "scmPublicNetworkAccess": "Enabled",
                 "siteConfig": {

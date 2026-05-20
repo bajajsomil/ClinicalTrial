@@ -4,6 +4,9 @@ param location string = resourceGroup().location
 @description('Optional: Subnet ID to deploy a private endpoint for the Frontend App Service')
 param subnetId string = ''
 
+@description('Optional: Subnet ID to deploy the VNet integration for the Frontend App Service')
+param integrationSubnetId string = ''
+
 @description('Optional: Subnet ID to deploy the Azure Container Apps Environment')
 param acaEnvSubnetId string = ''
 
@@ -274,7 +277,7 @@ resource frontend 'Microsoft.Web/sites@2022-09-01' = {
   location: location
   properties: {
     serverFarmId: asp_frontend.id
-    virtualNetworkSubnetId: !empty(subnetId) ? subnetId : null
+    virtualNetworkSubnetId: !empty(integrationSubnetId) ? integrationSubnetId : null
     publicNetworkAccess: !empty(deployerIp) ? 'Enabled' : publicNetworkAccess
     #disable-next-line BCP037
     scmPublicNetworkAccess: 'Enabled'

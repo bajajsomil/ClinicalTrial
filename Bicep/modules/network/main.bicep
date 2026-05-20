@@ -10,7 +10,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.0.0.0/22'
+        '10.0.0.0/21'
       ]
     }
     subnets: [
@@ -36,14 +36,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
           addressPrefix: '10.0.1.0/24'
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
-          delegations: [
-            {
-              name: 'appservice-delegation'
-              properties: {
-                serviceName: 'Microsoft.Web/serverFarms'
-              }
-            }
-          ]
         }
       }
       {
@@ -60,6 +52,22 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
           addressPrefix: '10.0.3.0/24'
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
+        }
+      }
+      {
+        name: 'integration-subnet'
+        properties: {
+          addressPrefix: '10.0.4.0/26'
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          delegations: [
+            {
+              name: 'appservice-delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
         }
       }
     ]
@@ -124,6 +132,7 @@ output appSubnetId string = '${vnet.id}/subnets/application-subnet'
 output webSubnetId string = '${vnet.id}/subnets/web-subnet'
 output dbSubnetId string = '${vnet.id}/subnets/db-subnet'
 output acaEnvSubnetId string = '${vnet.id}/subnets/aca-env-subnet'
+output integrationSubnetId string = '${vnet.id}/subnets/integration-subnet'
 
 output dnsZoneIdApp string = privateDnsZoneApp.id
 output dnsZoneIdOpenAI string = privateDnsZoneOpenAI.id

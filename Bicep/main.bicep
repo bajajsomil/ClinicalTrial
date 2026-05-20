@@ -129,6 +129,7 @@ module app_service './modules/app_service/main.bicep' = {
 
     subnetId: network.outputs.appSubnetId
     acaEnvSubnetId: network.outputs.acaEnvSubnetId
+    integrationSubnetId: network.outputs.integrationSubnetId
     dnsZoneId: network.outputs.dnsZoneIdApp
 
     openai_endpoint: openai.outputs.openai_endpoint
