@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "5412489239357067676"
+      "templateHash": "7190347460548646796"
     }
   },
   "parameters": {
@@ -117,6 +117,13 @@
       "defaultValue": "",
       "metadata": {
         "description": "Optional: The IP address of the deployer to allow for deployment and access"
+      }
+    },
+    "createRoleAssignments": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Set to true to create role assignments for Managed Identity. Set to false if you do not have User Access Administrator or Owner permissions."
       }
     }
   },
@@ -430,6 +437,9 @@
           },
           "principalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.principalId.value]"
+          },
+          "createRoleAssignments": {
+            "value": "[parameters('createRoleAssignments')]"
           }
         },
         "template": {
@@ -439,7 +449,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "1108620803272758600"
+              "templateHash": "620610105402757687"
             }
           },
           "parameters": {
@@ -487,6 +497,13 @@
               "defaultValue": "",
               "metadata": {
                 "description": "Optional: The principal ID of the Managed Identity to assign roles to."
+              }
+            },
+            "createRoleAssignments": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Optional: Set to true to create role assignments for Managed Identity."
               }
             }
           },
@@ -612,7 +629,7 @@
               ]
             },
             {
-              "condition": "[not(empty(parameters('principalId')))]",
+              "condition": "[and(not(empty(parameters('principalId'))), parameters('createRoleAssignments'))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]",
@@ -668,6 +685,9 @@
           },
           "principalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.principalId.value]"
+          },
+          "createRoleAssignments": {
+            "value": "[parameters('createRoleAssignments')]"
           }
         },
         "template": {
@@ -677,7 +697,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "16451576683527289708"
+              "templateHash": "5679344381155260517"
             }
           },
           "parameters": {
@@ -708,6 +728,13 @@
               "metadata": {
                 "description": "Optional: The principal ID of the Managed Identity to assign roles to."
               }
+            },
+            "createRoleAssignments": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Optional: Set to true to create role assignments for Managed Identity."
+              }
             }
           },
           "resources": [
@@ -729,7 +756,7 @@
               }
             },
             {
-              "condition": "[not(empty(parameters('principalId')))]",
+              "condition": "[and(not(empty(parameters('principalId'))), parameters('createRoleAssignments'))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName'))]",
@@ -790,6 +817,9 @@
           },
           "principalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.principalId.value]"
+          },
+          "createRoleAssignments": {
+            "value": "[parameters('createRoleAssignments')]"
           }
         },
         "template": {
@@ -799,7 +829,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "3108835385241660355"
+              "templateHash": "11877283750269097800"
             }
           },
           "parameters": {
@@ -847,6 +877,13 @@
               "defaultValue": "",
               "metadata": {
                 "description": "Optional: The principal ID of the Managed Identity to assign roles to."
+              }
+            },
+            "createRoleAssignments": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Optional: Set to true to create role assignments for Managed Identity."
               }
             }
           },
@@ -935,7 +972,7 @@
               ]
             },
             {
-              "condition": "[not(empty(parameters('principalId')))]",
+              "condition": "[and(not(empty(parameters('principalId'))), parameters('createRoleAssignments'))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
