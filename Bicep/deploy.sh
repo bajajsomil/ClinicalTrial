@@ -206,6 +206,31 @@ az webapp deploy \
   --src-path ../frontend.zip \
   --type zip
 
+# Whitelisting option at the end of deployment
+echo -e "\n🛡️ Access Security Configuration:"
+echo -n "❓ Do you want to whitelist an IP address/CIDR block on the Frontend App Service? (y/n) [default: n]: "
+read -r whitelist_choice
+if [[ "$whitelist_choice" =~ ^[Yy]$ ]]; then
+    echo -n "❓ Enter the IP address or CIDR range to whitelist (e.g. 192.168.1.0/24 or 203.0.113.5/32): "
+    read -r whitelist_ip
+    if [ ! -z "$whitelist_ip" ]; then
+        echo "🔒 Whitelisting $whitelist_ip on Frontend App Service $UI_NAME..."
+        az webapp config access-restriction add \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "$UI_NAME" \
+          --rule-name "UserWhitelistedIp" \
+          --action Allow \
+          --ip-address "$whitelist_ip" \
+          --priority 200 \
+          --description "Allow access from user whitelisted IP address space"
+        echo "✅ Whitelisted successfully!"
+    else
+        echo "⚠️ No IP address provided. Skipping whitelisting."
+    fi
+else
+    echo "⏭️ Skipping IP whitelisting."
+fi
+
 echo "================================================="
 echo "🎉 Deployment Complete!"
 echo "🌐 Frontend: https://${FRONTEND_HOST}"

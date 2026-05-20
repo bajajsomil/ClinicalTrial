@@ -274,10 +274,12 @@ resource frontend 'Microsoft.Web/sites@2022-09-01' = {
   location: location
   properties: {
     serverFarmId: asp_frontend.id
+    virtualNetworkSubnetId: !empty(subnetId) ? subnetId : null
     publicNetworkAccess: !empty(deployerIp) ? 'Enabled' : publicNetworkAccess
     #disable-next-line BCP037
     scmPublicNetworkAccess: 'Enabled'
     siteConfig: {
+      vnetRouteAllEnabled: true
       alwaysOn: true
       linuxFxVersion: 'NODE|20-lts'
       appCommandLine: 'pm2 serve /home/site/wwwroot --no-daemon --spa'

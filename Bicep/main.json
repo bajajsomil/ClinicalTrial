@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "7190347460548646796"
+      "templateHash": "16825841883721437765"
     }
   },
   "parameters": {
@@ -159,7 +159,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "16992944666482700363"
+              "templateHash": "12248210038049649429"
             }
           },
           "parameters": {
@@ -212,7 +212,15 @@
                     "properties": {
                       "addressPrefix": "10.0.1.0/24",
                       "privateEndpointNetworkPolicies": "Disabled",
-                      "privateLinkServiceNetworkPolicies": "Enabled"
+                      "privateLinkServiceNetworkPolicies": "Enabled",
+                      "delegations": [
+                        {
+                          "name": "appservice-delegation",
+                          "properties": {
+                            "serviceName": "Microsoft.Web/serverFarms"
+                          }
+                        }
+                      ]
                     }
                   },
                   {
@@ -1088,7 +1096,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "11776838637009831454"
+              "templateHash": "16903260539862048739"
             }
           },
           "parameters": {
@@ -1426,9 +1434,11 @@
               "location": "[parameters('location')]",
               "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('aspName'))]",
+                "virtualNetworkSubnetId": "[if(not(empty(parameters('subnetId'))), parameters('subnetId'), null())]",
                 "publicNetworkAccess": "[if(not(empty(parameters('deployerIp'))), 'Enabled', parameters('publicNetworkAccess'))]",
                 "scmPublicNetworkAccess": "Enabled",
                 "siteConfig": {
+                  "vnetRouteAllEnabled": true,
                   "alwaysOn": true,
                   "linuxFxVersion": "NODE|20-lts",
                   "appCommandLine": "pm2 serve /home/site/wwwroot --no-daemon --spa",
