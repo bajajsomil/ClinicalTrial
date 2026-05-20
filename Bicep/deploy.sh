@@ -158,6 +158,51 @@ fi
 
 echo "✅ Backend Host: $BACKEND_HOST"
 
+# --- Dynamic Scaling for Azure OpenAI Model Deployments ---
+scale_deployment_to_max() {
+    local dep_name=$1
+    local max_cap=100
+    local min_cap=1
+    local current_cap=$max_cap
+    local openai_account_name="${BASE_NAME}openai"
+
+    echo "📈 Scaling '$dep_name' to maximum available capacity (testing from ${max_cap}k TPM down)..."
+
+    while [ $current_cap -ge $min_cap ]; do
+        # Use az resource update to set capacity and suppress errors to keep output clean
+        if az resource update \
+          --resource-group "$RESOURCE_GROUP" \
+          --resource-type "Microsoft.CognitiveServices/accounts/deployments" \
+          --parent "accounts/$openai_account_name" \
+          --name "$dep_name" \
+          --set sku.capacity=$current_cap \
+          --query "sku.capacity" -o tsv >/dev/null 2>&1; then
+            echo "   ✅ Successfully scaled '$dep_name' to ${current_cap}k TPM!"
+            return 0
+        else
+            # Decrease capacity and try again
+            if [ $current_cap -gt 50 ]; then
+                current_cap=50
+            elif [ $current_cap -gt 20 ]; then
+                current_cap=20
+            elif [ $current_cap -gt 10 ]; then
+                current_cap=10
+            elif [ $current_cap -gt 5 ]; then
+                current_cap=5
+            else
+                current_cap=$((current_cap - 1))
+            fi
+        fi
+    done
+    echo "   ⚠️ Warning: Could not scale '$dep_name' beyond 1k TPM due to subscription quota limits."
+}
+
+echo -e "\n⚙️ Scaling OpenAI Model Capacities..."
+scale_deployment_to_max "gpt41"
+scale_deployment_to_max "gpt41_mini"
+scale_deployment_to_max "gpt4o"
+scale_deployment_to_max "gpt4o_mini"
+
 echo -e "\n🐳 Building & Pushing Docker Image..."
 
 cd ../backend
