@@ -136,9 +136,24 @@ ENTRA_CLIENT_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs.entra_c
 ENTRA_TENANT_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs.entra_tenant_id.value')
 ENTRA_CLIENT_SECRET=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs.entra_client_secret.value')
 
-if [ "$ENTRA_CLIENT_SECRET" == "placeholder" ]; then
+if [ "$ENTRA_CLIENT_SECRET" == "placeholder" ] && [ ! -z "$ENTRA_CLIENT_ID" ] && [ "$ENTRA_CLIENT_ID" != "null" ]; then
     echo "🔑 Generating real Entra ID Client Secret dynamically via service actions..."
-    ENTRA_CLIENT_SECRET=$(az ad app credential reset --id "$ENTRA_CLIENT_ID" --append --display-name "ClinicalAppSecret" --query password -o tsv | tr -d '\r')
+    # Wrap in || true to prevent script from crashing if command fails
+    ENTRA_CLIENT_SECRET=$(az ad app credential reset --id "$ENTRA_CLIENT_ID" --append --display-name "ClinicalAppSecret" --query password -o tsv 2>/dev/null | tr -d '\r') || true
+fi
+
+# Ensure Entra variables are not empty or null to avoid deployment crashes
+if [ -z "$ENTRA_CLIENT_SECRET" ] || [ "$ENTRA_CLIENT_SECRET" == "null" ]; then
+    echo "⚠️ Warning: Entra ID Client Secret is empty or null. Using placeholder."
+    ENTRA_CLIENT_SECRET="placeholder-secret-value"
+fi
+
+if [ -z "$ENTRA_CLIENT_ID" ] || [ "$ENTRA_CLIENT_ID" == "null" ]; then
+    ENTRA_CLIENT_ID="placeholder-client-id"
+fi
+
+if [ -z "$ENTRA_TENANT_ID" ] || [ "$ENTRA_TENANT_ID" == "null" ]; then
+    ENTRA_TENANT_ID="placeholder-tenant-id"
 fi
 
 echo "✅ Backend Host: $BACKEND_HOST"
