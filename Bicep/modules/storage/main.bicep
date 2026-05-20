@@ -17,9 +17,6 @@ param publicNetworkAccess string = 'Disabled'
 @description('The name of the storage account.')
 param storageAccountName string = 'clinicaltrialstore909'
 
-@description('Optional: The principal ID of the Managed Identity to assign roles to.')
-param principalId string = ''
-
 // --- Storage Account ---
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
@@ -89,16 +86,6 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
         }
       }
     ]
-  }
-}
-
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
-  name: guid(storageAccount.id, principalId, 'Storage Blob Data Contributor')
-  scope: storageAccount
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92e5b2-2d11-453d-a403-e96b0029c9fe')
-    principalId: principalId
-    principalType: 'ServicePrincipal'
   }
 }
 

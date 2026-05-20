@@ -62,9 +62,6 @@ param azure_tenant_id string = ''
 @secure()
 param azure_client_secret string = ''
 
-param identityId string = ''
-param identityClientId string = ''
-
 // ==========================================
 // 1. NEW BACKEND: AZURE CONTAINER APPS
 // ==========================================
@@ -115,12 +112,6 @@ resource env 'Microsoft.App/managedEnvironments@2023-05-01' = {
 resource backend 'Microsoft.App/containerApps@2023-05-01' = {
   name: backendAppName
   location: location
-  identity: !empty(identityId) ? {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${identityId}': {}
-    }
-  } : null
   properties: {
     managedEnvironmentId: env.id
     configuration: {
@@ -241,10 +232,6 @@ resource backend 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'ENTRA_CLIENT_SECRET'
               secretRef: 'azure-client-secret'
-            }
-            {
-              name: 'AZURE_CLIENT_ID'
-              value: identityClientId
             }
           ]
         }
