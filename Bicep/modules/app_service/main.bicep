@@ -17,6 +17,9 @@ param dnsZoneId string = ''
 ])
 param publicNetworkAccess string = 'Disabled'
 
+@description('Optional: The IP address of the deployer to allow for deployment and access')
+param deployerIp string = ''
+
 @description('The name of the Azure Container Registry')
 param acrName string = 'clinicaltrialacr909'
 
@@ -258,13 +261,32 @@ resource frontend 'Microsoft.Web/sites@2022-09-01' = {
   location: location
   properties: {
     serverFarmId: asp_frontend.id
-    publicNetworkAccess: publicNetworkAccess
+    publicNetworkAccess: !empty(deployerIp) ? 'Enabled' : publicNetworkAccess
     #disable-next-line BCP037
     scmPublicNetworkAccess: 'Enabled'
     siteConfig: {
       alwaysOn: true
       linuxFxVersion: 'NODE|20-lts'
       appCommandLine: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
+      ipSecurityRestrictions: !empty(deployerIp) ? [
+        {
+          ipAddress: '${deployerIp}/32'
+          action: 'Allow'
+          priority: 100
+          name: 'AllowDeployer'
+          description: 'Allow access from developer machine'
+        }
+      ] : []
+      scmIpSecurityRestrictions: !empty(deployerIp) ? [
+        {
+          ipAddress: '${deployerIp}/32'
+          action: 'Allow'
+          priority: 100
+          name: 'AllowDeployer'
+          description: 'Allow deployment from developer machine'
+        }
+      ] : []
+      scmIpSecurityRestrictionsUseMain: false
     }
   }
 }

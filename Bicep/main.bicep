@@ -54,6 +54,9 @@ param frontendAppName string = '${baseName}-webapp'
 @description('The Azure region for the resource group and resources')
 param location string = 'switzerlandnorth'
 
+@description('Optional: The IP address of the deployer to allow for deployment and access')
+param deployerIp string = ''
+
 resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: rgName
   location: location
@@ -126,6 +129,7 @@ module app_service './modules/app_service/main.bicep' = {
     backendAppName: backendAppName
     aspName: aspName
     frontendAppName: frontendAppName
+    deployerIp: deployerIp
   }
 }
 

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "9069898148304740390"
+      "templateHash": "14815799825833486035"
     }
   },
   "parameters": {
@@ -110,6 +110,13 @@
       "defaultValue": "switzerlandnorth",
       "metadata": {
         "description": "The Azure region for the resource group and resources"
+      }
+    },
+    "deployerIp": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Optional: The IP address of the deployer to allow for deployment and access"
       }
     }
   },
@@ -877,6 +884,9 @@
           },
           "frontendAppName": {
             "value": "[parameters('frontendAppName')]"
+          },
+          "deployerIp": {
+            "value": "[parameters('deployerIp')]"
           }
         },
         "template": {
@@ -886,7 +896,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "4875530433079728236"
+              "templateHash": "15821205464699223023"
             }
           },
           "parameters": {
@@ -927,6 +937,13 @@
               ],
               "metadata": {
                 "description": "Public network access status for the Frontend App Service"
+              }
+            },
+            "deployerIp": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: The IP address of the deployer to allow for deployment and access"
               }
             },
             "acrName": {
@@ -1204,12 +1221,15 @@
               "location": "[parameters('location')]",
               "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('aspName'))]",
-                "publicNetworkAccess": "[parameters('publicNetworkAccess')]",
+                "publicNetworkAccess": "[if(not(empty(parameters('deployerIp'))), 'Enabled', parameters('publicNetworkAccess'))]",
                 "scmPublicNetworkAccess": "Enabled",
                 "siteConfig": {
                   "alwaysOn": true,
                   "linuxFxVersion": "NODE|20-lts",
-                  "appCommandLine": "pm2 serve /home/site/wwwroot --no-daemon --spa"
+                  "appCommandLine": "pm2 serve /home/site/wwwroot --no-daemon --spa",
+                  "ipSecurityRestrictions": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('ipAddress', format('{0}/32', parameters('deployerIp')), 'action', 'Allow', 'priority', 100, 'name', 'AllowDeployer', 'description', 'Allow access from developer machine')), createArray())]",
+                  "scmIpSecurityRestrictions": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('ipAddress', format('{0}/32', parameters('deployerIp')), 'action', 'Allow', 'priority', 100, 'name', 'AllowDeployer', 'description', 'Allow deployment from developer machine')), createArray())]",
+                  "scmIpSecurityRestrictionsUseMain": false
                 }
               },
               "dependsOn": [

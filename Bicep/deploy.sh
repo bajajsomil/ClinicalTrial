@@ -96,6 +96,18 @@ fi
 # Fixed double quote issue for SP query
 MSGRAPH_SP_ID=$(az ad sp list --display-name "Microsoft Graph" --query "[0].id" -o tsv | tr -d '\r')
 
+# Fetch deployer's public IP
+echo "🔍 Fetching deployer public IP..."
+DEPLOYER_IP=$(curl -s https://api.ipify.org | tr -d '\r')
+if [ -z "$DEPLOYER_IP" ]; then
+    DEPLOYER_IP=$(curl -s https://ifconfig.me | tr -d '\r')
+fi
+if [ -z "$DEPLOYER_IP" ]; then
+    echo "⚠️ Warning: Failed to fetch deployer public IP. App Service deployment might fail if public access is restricted."
+else
+    echo "🎯 Deployer Public IP: $DEPLOYER_IP"
+fi
+
 DEPLOY_NAME="clinical-trial-deployment-$(date +%s)"
 
 # Run Deployment with dynamic parameters
@@ -113,6 +125,7 @@ DEPLOYMENT_OUTPUT=$(az deployment sub create \
     frontendAppName="$UI_NAME" \
     storageAccountName="$STORAGE_ACCOUNT_NAME" \
     location="$LOCATION" \
+    deployerIp="$DEPLOYER_IP" \
   --output json | tr -d '\r')
 
 
