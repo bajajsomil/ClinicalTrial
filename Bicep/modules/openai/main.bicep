@@ -17,6 +17,9 @@ param publicNetworkAccess string = 'Disabled'
 @description('The name of the OpenAI resource.')
 param openaiName string = 'clinicaltrialopenai909'
 
+@description('Optional: The principal ID of the Managed Identity to assign roles to.')
+param principalId string = ''
+
 /*
 ========================================
 Azure OpenAI Account
@@ -170,8 +173,23 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
 
 /*
 ========================================
-Outputs
+Role Assignment for Managed Identity
 ========================================
+*/
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
+  name: guid(openai.id, principalId, 'Cognitive Services OpenAI User')
+  scope: openai
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4fbc-af51-cd5413fcf214')
+    principalId: principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+/*
+========================================
+Outputs
+=======================================
 */
 output openai_endpoint string = openai.properties.endpoint
 

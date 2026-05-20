@@ -71,6 +71,15 @@ module network './modules/network/main.bicep' = {
   }
 }
 
+module identity './modules/identity/main.bicep' = {
+  name: 'identity'
+  scope: rg
+  params: {
+    location: rg.location
+    baseName: baseName
+  }
+}
+
 module openai './modules/openai/main.bicep' = {
   name: 'openai'
   scope: rg
@@ -79,6 +88,7 @@ module openai './modules/openai/main.bicep' = {
     subnetId: network.outputs.webSubnetId
     dnsZoneId: network.outputs.dnsZoneIdOpenAI
     openaiName: openaiName
+    principalId: identity.outputs.principalId
   }
 }
 
@@ -88,6 +98,7 @@ module docintel './modules/doc_intelligence/main.bicep' = {
   params: {
     location: rg.location
     docintelName: docintelName
+    principalId: identity.outputs.principalId
   }
 }
 
@@ -99,6 +110,7 @@ module storage './modules/storage/main.bicep' = {
     subnetId: network.outputs.dbSubnetId
     dnsZoneId: network.outputs.dnsZoneIdBlob
     storageAccountName: storageAccountName
+    principalId: identity.outputs.principalId
   }
 }
 
@@ -130,6 +142,8 @@ module app_service './modules/app_service/main.bicep' = {
     aspName: aspName
     frontendAppName: frontendAppName
     deployerIp: deployerIp
+    identityId: identity.outputs.id
+    identityClientId: identity.outputs.clientId
   }
 }
 
