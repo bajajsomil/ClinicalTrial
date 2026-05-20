@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "14249265878642010558"
+      "templateHash": "8761458678042599804"
     }
   },
   "parameters": {
@@ -469,7 +469,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "620610105402757687"
+              "templateHash": "17306526377487282440"
             }
           },
           "parameters": {
@@ -566,7 +566,7 @@
             {
               "type": "Microsoft.CognitiveServices/accounts/deployments",
               "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt4o')]",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt41')]",
               "sku": {
                 "name": "GlobalStandard",
                 "capacity": 1
@@ -574,8 +574,8 @@
               "properties": {
                 "model": {
                   "format": "OpenAI",
-                  "name": "gpt-4o",
-                  "version": "2024-11-20"
+                  "name": "gpt-4.1",
+                  "version": "2025-04-14"
                 }
               },
               "dependsOn": [
@@ -586,7 +586,47 @@
             {
               "type": "Microsoft.CognitiveServices/accounts/deployments",
               "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt4o-mini')]",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt41_mini')]",
+              "sku": {
+                "name": "GlobalStandard",
+                "capacity": 1
+              },
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "gpt-4.1-mini",
+                  "version": "2025-04-14"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt41')]",
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt4o')]",
+              "sku": {
+                "name": "Standard",
+                "capacity": 1
+              },
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "gpt-4o",
+                  "version": "2024-11-20"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt41_mini')]",
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt4o_mini')]",
               "sku": {
                 "name": "GlobalStandard",
                 "capacity": 1

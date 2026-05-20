@@ -71,23 +71,59 @@ resource delayScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
 
 /*
 ========================================
-GPT-4o Deployment
+OpenAI Models Deployment
 ========================================
 */
-resource gpt4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
-  parent: openai
-  name: 'gpt4o'
 
+resource gpt41 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+  parent: openai
+  name: 'gpt41'
   #disable-next-line no-unnecessary-dependson
   dependsOn: [
     delayScript
   ]
-
   sku: {
     name: 'GlobalStandard'
     capacity: 1
   }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: 'gpt-4.1'
+      version: '2025-04-14'
+    }
+  }
+}
 
+resource gpt41_mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+  parent: openai
+  name: 'gpt41_mini'
+  dependsOn: [
+    gpt41
+  ]
+  sku: {
+    name: 'GlobalStandard'
+    capacity: 1
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: 'gpt-4.1-mini'
+      version: '2025-04-14'
+    }
+  }
+}
+
+resource gpt4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+  parent: openai
+  name: 'gpt4o'
+  dependsOn: [
+    gpt41_mini
+  ]
+  sku: {
+    name: 'Standard'
+    capacity: 1
+  }
   properties: {
     model: {
       format: 'OpenAI'
@@ -97,24 +133,16 @@ resource gpt4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   }
 }
 
-/*
-========================================
-GPT-4o Mini Deployment
-========================================
-*/
-resource gpt4oMini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+resource gpt4o_mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   parent: openai
-  name: 'gpt4o-mini'
-
+  name: 'gpt4o_mini'
   dependsOn: [
     gpt4o
   ]
-
   sku: {
     name: 'GlobalStandard'
     capacity: 1
   }
-
   properties: {
     model: {
       format: 'OpenAI'
