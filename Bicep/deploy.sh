@@ -158,116 +158,116 @@ fi
 
 echo "✅ Backend Host: $BACKEND_HOST"
 
-# # --- Dynamic Scaling for Azure OpenAI Model Deployments ---
-# scale_deployment_to_max() {
-#     local dep_name=$1
-#     local max_cap=100
-#     local openai_account_name="${BASE_NAME}openai"
+# --- Dynamic Scaling for Azure OpenAI Model Deployments ---
+scale_deployment_to_max() {
+    local dep_name=$1
+    local max_cap=100
+    local openai_account_name="${BASE_NAME}openai"
 
-#     # 1. Fetch deployment information to get SKU and Model details
-#     local dep_info
-#     dep_info=$(az cognitiveservices account deployment show \
-#       --resource-group "$RESOURCE_GROUP" \
-#       --name "$openai_account_name" \
-#       --deployment-name "$dep_name" \
-#       --output json 2>/dev/null)
+    # 1. Fetch deployment information to get SKU and Model details
+    local dep_info
+    dep_info=$(az cognitiveservices account deployment show \
+      --resource-group "$RESOURCE_GROUP" \
+      --name "$openai_account_name" \
+      --deployment-name "$dep_name" \
+      --output json 2>/dev/null)
 
-#     if [ -z "$dep_info" ]; then
-#         echo "   ⚠️ Warning: Could not find deployment info for '$dep_name'. Skipping dynamic scaling."
-#         return 0
-#     fi
+    if [ -z "$dep_info" ]; then
+        echo "   ⚠️ Warning: Could not find deployment info for '$dep_name'. Skipping dynamic scaling."
+        return 0
+    fi
 
-#     local sku_name
-#     sku_name=$(echo "$dep_info" | jq -r '.sku.name')
-#     local model_name
-#     model_name=$(echo "$dep_info" | jq -r '.properties.model.name')
-#     local current_cap
-#     current_cap=$(echo "$dep_info" | jq -r '.sku.capacity')
+    local sku_name
+    sku_name=$(echo "$dep_info" | jq -r '.sku.name')
+    local model_name
+    model_name=$(echo "$dep_info" | jq -r '.properties.model.name')
+    local current_cap
+    current_cap=$(echo "$dep_info" | jq -r '.sku.capacity')
 
-#     # 2. Determine target capacity based on remaining available quota
-#     local target_cap=$max_cap
+    # 2. Determine target capacity based on remaining available quota
+    local target_cap=$max_cap
 
-#     if [ -n "$USAGES_JSON" ] && [ "$USAGES_JSON" != "[]" ]; then
-#         # Construct quota key: e.g., OpenAI.GlobalStandard.gpt-4o or OpenAI.Standard.gpt-4o
-#         local quota_key="OpenAI.${sku_name}.${model_name}"
-#         local quota_item
-#         quota_item=$(echo "$USAGES_JSON" | jq --arg key "$quota_key" '.[] | select(.name.value == $key)')
+    if [ -n "$USAGES_JSON" ] && [ "$USAGES_JSON" != "[]" ]; then
+        # Construct quota key: e.g., OpenAI.GlobalStandard.gpt-4o or OpenAI.Standard.gpt-4o
+        local quota_key="OpenAI.${sku_name}.${model_name}"
+        local quota_item
+        quota_item=$(echo "$USAGES_JSON" | jq --arg key "$quota_key" '.[] | select(.name.value == $key)')
 
-#         if [ -n "$quota_item" ]; then
-#             local limit
-#             limit=$(echo "$quota_item" | jq -r '.limit')
-#             local currentValue
-#             currentValue=$(echo "$quota_item" | jq -r '.currentValue')
+        if [ -n "$quota_item" ]; then
+            local limit
+            limit=$(echo "$quota_item" | jq -r '.limit')
+            local currentValue
+            currentValue=$(echo "$quota_item" | jq -r '.currentValue')
 
-#             # Calculate remaining quota safely using jq (handles decimals/floats gracefully)
-#             local remaining_quota
-#             remaining_quota=$(jq -n --arg limit "$limit" --arg cur "$currentValue" '($limit | tonumber) - ($cur | tonumber) | floor')
+            # Calculate remaining quota safely using jq (handles decimals/floats gracefully)
+            local remaining_quota
+            remaining_quota=$(jq -n --arg limit "$limit" --arg cur "$currentValue" '($limit | tonumber) - ($cur | tonumber) | floor')
 
-#             # Standard SKU limit is in TPM (e.g. 100000), need to convert to Thousands (k) TPM
-#             local remaining_quota_k
-#             if [ "$sku_name" == "Standard" ]; then
-#                 remaining_quota_k=$(jq -n --arg rem "$remaining_quota" '($rem | tonumber) / 1000 | floor')
-#             else
-#                 remaining_quota_k=$remaining_quota
-#             fi
+            # Standard SKU limit is in TPM (e.g. 100000), need to convert to Thousands (k) TPM
+            local remaining_quota_k
+            if [ "$sku_name" == "Standard" ]; then
+                remaining_quota_k=$(jq -n --arg rem "$remaining_quota" '($rem | tonumber) / 1000 | floor')
+            else
+                remaining_quota_k=$remaining_quota
+            fi
 
-#             # Add current deployment capacity back (since it is already counted in currentValue)
-#             # and limit target to max_cap
-#             target_cap=$(jq -n --arg max "$max_cap" --arg rem "$remaining_quota_k" --arg cur "$current_cap" '
-#               [($max | tonumber), (($rem | tonumber) + ($cur | tonumber))] | min | floor
-#             ')
-#         else
-#             echo "   ⚠️ Quota item '$quota_key' not found in regional usage list. Using default maximum."
-#         fi
-#     fi
+            # Add current deployment capacity back (since it is already counted in currentValue)
+            # and limit target to max_cap
+            target_cap=$(jq -n --arg max "$max_cap" --arg rem "$remaining_quota_k" --arg cur "$current_cap" '
+              [($max | tonumber), (($rem | tonumber) + ($cur | tonumber))] | min | floor
+            ')
+        else
+            echo "   ⚠️ Quota item '$quota_key' not found in regional usage list. Using default maximum."
+        fi
+    fi
 
-#     if [ "$target_cap" -lt 1 ]; then
-#         target_cap=1
-#     fi
+    if [ "$target_cap" -lt 1 ]; then
+        target_cap=1
+    fi
 
-#     echo "📈 Scaling '$dep_name' ($sku_name $model_name) to target capacity of ${target_cap}k TPM..."
+    echo "📈 Scaling '$dep_name' ($sku_name $model_name) to target capacity of ${target_cap}k TPM..."
 
-#     # 3. Perform a single update call with transparent error capture
-#     local update_err
-#     update_err=$(az resource update \
-#       --resource-group "$RESOURCE_GROUP" \
-#       --resource-type "Microsoft.CognitiveServices/accounts/deployments" \
-#       --parent "accounts/$openai_account_name" \
-#       --name "$dep_name" \
-#       --set sku.capacity="$target_cap" \
-#       --query "sku.capacity" -o tsv 2>&1)
+    # 3. Perform a single update call with transparent error capture
+    local update_err
+    update_err=$(az resource update \
+      --resource-group "$RESOURCE_GROUP" \
+      --resource-type "Microsoft.CognitiveServices/accounts/deployments" \
+      --parent "accounts/$openai_account_name" \
+      --name "$dep_name" \
+      --set sku.capacity="$target_cap" \
+      --query "sku.capacity" -o tsv 2>&1)
 
-#     if [ $? -eq 0 ]; then
-#         echo "   ✅ Successfully scaled '$dep_name' to ${target_cap}k TPM!"
-#         return 0
-#     else
-#         echo "   ❌ Failed to scale to ${target_cap}k TPM. Error: $update_err"
-#         if [ "$target_cap" -gt 1 ]; then
-#             echo "   🔄 Falling back to safe capacity of 1k TPM..."
-#             if az resource update \
-#               --resource-group "$RESOURCE_GROUP" \
-#               --resource-type "Microsoft.CognitiveServices/accounts/deployments" \
-#               --parent "accounts/$openai_account_name" \
-#               --name "$dep_name" \
-#               --set sku.capacity=1 \
-#               --query "sku.capacity" -o tsv >/dev/null 2>&1; then
-#                 echo "   ✅ Successfully scaled '$dep_name' to 1k TPM!"
-#                 return 0
-#             else
-#                 echo "   ⚠️ Warning: Could not scale '$dep_name' beyond Bicep default capacity."
-#             fi
-#         fi
-#     fi
-# }
+    if [ $? -eq 0 ]; then
+        echo "   ✅ Successfully scaled '$dep_name' to ${target_cap}k TPM!"
+        return 0
+    else
+        echo "   ❌ Failed to scale to ${target_cap}k TPM. Error: $update_err"
+        if [ "$target_cap" -gt 1 ]; then
+            echo "   🔄 Falling back to safe capacity of 1k TPM..."
+            if az resource update \
+              --resource-group "$RESOURCE_GROUP" \
+              --resource-type "Microsoft.CognitiveServices/accounts/deployments" \
+              --parent "accounts/$openai_account_name" \
+              --name "$dep_name" \
+              --set sku.capacity=1 \
+              --query "sku.capacity" -o tsv >/dev/null 2>&1; then
+                echo "   ✅ Successfully scaled '$dep_name' to 1k TPM!"
+                return 0
+            else
+                echo "   ⚠️ Warning: Could not scale '$dep_name' beyond Bicep default capacity."
+            fi
+        fi
+    fi
+}
 
-# echo -e "\n⚙️ Scaling OpenAI Model Capacities..."
-# # Query regional Cognitive Services usages once to prevent ARM rate limits (429)
-# USAGES_JSON=$(az cognitiveservices usage list --location "$LOCATION" --output json 2>/dev/null || echo "[]")
+echo -e "\n⚙️ Scaling OpenAI Model Capacities..."
+# Query regional Cognitive Services usages once to prevent ARM rate limits (429)
+USAGES_JSON=$(az cognitiveservices usage list --location "$LOCATION" --output json 2>/dev/null || echo "[]")
 
-# scale_deployment_to_max "gpt41"
-# scale_deployment_to_max "gpt41_mini"
-# scale_deployment_to_max "gpt4o"
-# scale_deployment_to_max "gpt4o_mini"
+scale_deployment_to_max "gpt41"
+scale_deployment_to_max "gpt41_mini"
+scale_deployment_to_max "gpt4o"
+scale_deployment_to_max "gpt4o_mini"
 
 echo -e "\n🐳 Building & Pushing Docker Image..."
 
