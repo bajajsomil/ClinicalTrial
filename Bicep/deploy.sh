@@ -53,9 +53,27 @@ else
     fi
 fi
 
-# Clean carriage returns from any input or script line endings
+# Check command line argument for user allowed IP third
+USER_ALLOWED_IP=""
+if [ ! -z "$3" ]; then
+    USER_ALLOWED_IP="$3"
+    echo "🎯 Using custom whitelisted IP from argument: $USER_ALLOWED_IP"
+else
+    # Interactive prompt with timeout for premium developer experience
+    echo -n "❓ Enter an IP address or CIDR range to whitelist (e.g. 203.0.113.5/32) [default: none] (timeout 10s): "
+    if read -t 10 input_ip; then
+        USER_ALLOWED_IP="$input_ip"
+    fi
+    if [ -z "$USER_ALLOWED_IP" ]; then
+        echo -e "\n⏰ Timeout or empty input. No additional IP whitelisted."
+    else
+        echo "🎯 Using whitelisted IP: $USER_ALLOWED_IP"
+    fi
+fi
+
 BASE_NAME=$(echo "$BASE_NAME" | tr -d '\r')
 LOCATION=$(echo "$LOCATION" | tr -d '\r')
+USER_ALLOWED_IP=$(echo "$USER_ALLOWED_IP" | tr -d '\r')
 
 # Sanitize and construct dynamic names
 RESOURCE_GROUP=$(echo "${BASE_NAME}-rg" | tr -d '\r')
@@ -126,6 +144,7 @@ DEPLOYMENT_OUTPUT=$(az deployment sub create \
     storageAccountName="$STORAGE_ACCOUNT_NAME" \
     location="$LOCATION" \
     deployerIp="$DEPLOYER_IP" \
+    userAllowedIp="$USER_ALLOWED_IP" \
   --output json | tr -d '\r')
 
 
@@ -335,27 +354,19 @@ az webapp deploy \
 
 # Whitelisting option at the end of deployment
 echo -e "\n🛡️ Access Security Configuration:"
-echo -n "❓ Do you want to whitelist an IP address/CIDR block on the Frontend App Service? (y/n) [default: n]: "
-read -r whitelist_choice
-if [[ "$whitelist_choice" =~ ^[Yy]$ ]]; then
-    echo -n "❓ Enter the IP address or CIDR range to whitelist (e.g. 192.168.1.0/24 or 203.0.113.5/32): "
-    read -r whitelist_ip
-    if [ ! -z "$whitelist_ip" ]; then
-        echo "🔒 Whitelisting $whitelist_ip on Frontend App Service $UI_NAME..."
-        az webapp config access-restriction add \
-          --resource-group "$RESOURCE_GROUP" \
-          --name "$UI_NAME" \
-          --rule-name "UserWhitelistedIp" \
-          --action Allow \
-          --ip-address "$whitelist_ip" \
-          --priority 200 \
-          --description "Allow access from user whitelisted IP address space"
-        echo "✅ Whitelisted successfully!"
-    else
-        echo "⚠️ No IP address provided. Skipping whitelisting."
-    fi
+if [ -n "$USER_ALLOWED_IP" ]; then
+    echo "🔒 Whitelisting $USER_ALLOWED_IP on Frontend App Service $UI_NAME..."
+    az webapp config access-restriction add \
+      --resource-group "$RESOURCE_GROUP" \
+      --name "$UI_NAME" \
+      --rule-name "UserWhitelistedIp" \
+      --action Allow \
+      --ip-address "$USER_ALLOWED_IP" \
+      --priority 200 \
+      --description "Allow access from user whitelisted IP address space"
+    echo "✅ Whitelisted successfully!"
 else
-    echo "⏭️ Skipping IP whitelisting."
+    echo "⏭️ Skipping IP whitelisting on App Service (no IP provided)."
 fi
 
 echo "================================================="

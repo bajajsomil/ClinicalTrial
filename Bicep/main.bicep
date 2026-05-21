@@ -57,6 +57,9 @@ param location string = 'switzerlandnorth'
 @description('Optional: The IP address of the deployer to allow for deployment and access')
 param deployerIp string = ''
 
+@description('Optional: Additional user allowed IP address or CIDR to whitelist')
+param userAllowedIp string = ''
+
 @description('Set to true to create role assignments for Managed Identity. Set to false if you do not have User Access Administrator or Owner permissions.')
 param createRoleAssignments bool = false
 
@@ -71,6 +74,8 @@ module network './modules/network/main.bicep' = {
   params: {
     location: rg.location
     vnetName: vnetName
+    deployerIp: deployerIp
+    userAllowedIp: userAllowedIp
   }
 }
 
