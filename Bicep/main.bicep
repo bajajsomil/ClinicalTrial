@@ -68,6 +68,15 @@ resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   location: location
 }
 
+module monitoring './modules/monitoring/main.bicep' = {
+  name: 'monitoring'
+  scope: rg
+  params: {
+    location: rg.location
+    lawName: lawName
+  }
+}
+
 module network './modules/network/main.bicep' = {
   name: 'network'
   scope: rg
@@ -98,6 +107,7 @@ module openai './modules/openai/main.bicep' = {
     openaiName: openaiName
     principalId: identity.outputs.principalId
     createRoleAssignments: createRoleAssignments
+    logAnalyticsWorkspaceId: monitoring.outputs.lawId
   }
 }
 
@@ -109,6 +119,9 @@ module docintel './modules/doc_intelligence/main.bicep' = {
     docintelName: docintelName
     principalId: identity.outputs.principalId
     createRoleAssignments: createRoleAssignments
+    subnetId: network.outputs.webSubnetId
+    dnsZoneId: network.outputs.dnsZoneIdCognitive
+    logAnalyticsWorkspaceId: monitoring.outputs.lawId
   }
 }
 

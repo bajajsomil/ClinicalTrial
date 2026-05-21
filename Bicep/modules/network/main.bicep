@@ -296,6 +296,11 @@ resource privateDnsZoneBlob 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   location: 'global'
 }
 
+resource privateDnsZoneCognitive 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.cognitiveservices.azure.com'
+  location: 'global'
+}
+
 // VNet Links to Private DNS Zones
 resource vnetLinkApp 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
   parent: privateDnsZoneApp
@@ -333,6 +338,18 @@ resource vnetLinkBlob 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@202
   }
 }
 
+resource vnetLinkCognitive 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privateDnsZoneCognitive
+  name: '${vnetName}-link-cognitive'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
 output vnetId string = vnet.id
 output appSubnetId string = '${vnet.id}/subnets/application-subnet'
 output webSubnetId string = '${vnet.id}/subnets/web-subnet'
@@ -343,3 +360,4 @@ output integrationSubnetId string = '${vnet.id}/subnets/integration-subnet'
 output dnsZoneIdApp string = privateDnsZoneApp.id
 output dnsZoneIdOpenAI string = privateDnsZoneOpenAI.id
 output dnsZoneIdBlob string = privateDnsZoneBlob.id
+output dnsZoneIdCognitive string = privateDnsZoneCognitive.id

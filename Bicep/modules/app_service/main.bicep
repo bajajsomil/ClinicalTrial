@@ -85,14 +85,8 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
 }
 
 // 1b. Log Analytics Workspace (Required for ACA)
-resource law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+resource law 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: lawName
-  location: location
-  properties: {
-    sku: {
-      name: 'PerGB2018'
-    }
-  }
 }
 
 // 1c. Container App Environment (The Cluster)
@@ -281,6 +275,7 @@ resource frontend 'Microsoft.Web/sites@2022-09-01' = {
     publicNetworkAccess: !empty(deployerIp) ? 'Enabled' : publicNetworkAccess
     #disable-next-line BCP037
     scmPublicNetworkAccess: 'Enabled'
+    httpsOnly: true
     siteConfig: {
       vnetRouteAllEnabled: true
       alwaysOn: true
@@ -342,6 +337,25 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
         properties: {
           privateDnsZoneId: dnsZoneId
         }
+      }
+    ]
+  }
+}
+resource webAppDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${frontendAppName}-diagnostics'
+  scope: frontend
+  properties: {
+    workspaceId: law.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
       }
     ]
   }
