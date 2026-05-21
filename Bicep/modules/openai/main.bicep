@@ -92,6 +92,7 @@ resource gpt41 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
       name: 'gpt-4.1'
       version: '2025-04-14'
     }
+    raiPolicyName: 'Microsoft.Default'
   }
 }
 
@@ -111,6 +112,7 @@ resource gpt41_mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01
       name: 'gpt-4.1-mini'
       version: '2025-04-14'
     }
+    raiPolicyName: 'Microsoft.Default'
   }
 }
 
@@ -130,6 +132,7 @@ resource gpt4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
       name: 'gpt-4o'
       version: '2024-11-20'
     }
+    raiPolicyName: 'Microsoft.Default'
   }
 }
 
@@ -149,6 +152,7 @@ resource gpt4o_mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01
       name: 'gpt-4o-mini'
       version: '2024-07-18'
     }
+    raiPolicyName: 'Microsoft.Default'
   }
 }
 
