@@ -7,6 +7,12 @@ param docintel_api_version string = '2023-10-01'
 @description('The name of the Document Intelligence resource.')
 param docintelName string = 'clinicalTrialdocintel909'
 
+@description('Optional: The principal ID of the Managed Identity to assign roles to.')
+param principalId string = ''
+
+@description('Optional: Set to true to create role assignments for Managed Identity.')
+param createRoleAssignments bool = false
+
 resource formrecognizer 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: docintelName
   location: location
@@ -22,6 +28,16 @@ resource formrecognizer 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     // Cognitive Services typically require the properties object, 
     // even if empty, depending on the API version.
     publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId) && createRoleAssignments) {
+  name: guid(formrecognizer.id, principalId, 'Cognitive Services User')
+  scope: formrecognizer
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b40fb-5815-43a2-ac46-92c12159d690')
+    principalId: principalId
+    principalType: 'ServicePrincipal'
   }
 }
 

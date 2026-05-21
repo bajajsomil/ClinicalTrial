@@ -4,6 +4,9 @@ param location string = resourceGroup().location
 @description('Optional: Subnet ID to deploy a private endpoint for the Frontend App Service')
 param subnetId string = ''
 
+@description('Optional: Subnet ID to deploy the VNet integration for the Frontend App Service')
+param integrationSubnetId string = ''
+
 @description('Optional: Subnet ID to deploy the Azure Container Apps Environment')
 param acaEnvSubnetId string = ''
 
@@ -62,6 +65,9 @@ param azure_tenant_id string = ''
 @secure()
 param azure_client_secret string = ''
 
+param identityId string = ''
+param identityClientId string = ''
+
 // ==========================================
 // 1. NEW BACKEND: AZURE CONTAINER APPS
 // ==========================================
@@ -112,6 +118,12 @@ resource env 'Microsoft.App/managedEnvironments@2023-05-01' = {
 resource backend 'Microsoft.App/containerApps@2023-05-01' = {
   name: backendAppName
   location: location
+  identity: !empty(identityId) ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${identityId}': {}
+    }
+  } : null
   properties: {
     managedEnvironmentId: env.id
     configuration: {
@@ -233,6 +245,10 @@ resource backend 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'ENTRA_CLIENT_SECRET'
               secretRef: 'azure-client-secret'
             }
+            {
+              name: 'AZURE_CLIENT_ID'
+              value: identityClientId
+            }
           ]
         }
       ]
@@ -261,10 +277,12 @@ resource frontend 'Microsoft.Web/sites@2022-09-01' = {
   location: location
   properties: {
     serverFarmId: asp_frontend.id
+    virtualNetworkSubnetId: !empty(integrationSubnetId) ? integrationSubnetId : null
     publicNetworkAccess: !empty(deployerIp) ? 'Enabled' : publicNetworkAccess
     #disable-next-line BCP037
     scmPublicNetworkAccess: 'Enabled'
     siteConfig: {
+      vnetRouteAllEnabled: true
       alwaysOn: true
       linuxFxVersion: 'NODE|20-lts'
       appCommandLine: 'pm2 serve /home/site/wwwroot --no-daemon --spa'

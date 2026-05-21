@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "5412489239357067676"
+      "templateHash": "8761458678042599804"
     }
   },
   "parameters": {
@@ -118,6 +118,13 @@
       "metadata": {
         "description": "Optional: The IP address of the deployer to allow for deployment and access"
       }
+    },
+    "createRoleAssignments": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Set to true to create role assignments for Managed Identity. Set to false if you do not have User Access Administrator or Owner permissions."
+      }
     }
   },
   "resources": [
@@ -152,7 +159,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "16992944666482700363"
+              "templateHash": "13115513712131149133"
             }
           },
           "parameters": {
@@ -180,7 +187,7 @@
               "properties": {
                 "addressSpace": {
                   "addressPrefixes": [
-                    "10.0.0.0/22"
+                    "10.0.0.0/21"
                   ]
                 },
                 "subnets": [
@@ -222,6 +229,22 @@
                       "addressPrefix": "10.0.3.0/24",
                       "privateEndpointNetworkPolicies": "Disabled",
                       "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  },
+                  {
+                    "name": "integration-subnet",
+                    "properties": {
+                      "addressPrefix": "10.0.4.0/26",
+                      "privateEndpointNetworkPolicies": "Disabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled",
+                      "delegations": [
+                        {
+                          "name": "appservice-delegation",
+                          "properties": {
+                            "serviceName": "Microsoft.Web/serverFarms"
+                          }
+                        }
+                      ]
                     }
                   }
                 ]
@@ -314,6 +337,10 @@
             "acaEnvSubnetId": {
               "type": "string",
               "value": "[format('{0}/subnets/aca-env-subnet', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
+            },
+            "integrationSubnetId": {
+              "type": "string",
+              "value": "[format('{0}/subnets/integration-subnet', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
             },
             "dnsZoneIdApp": {
               "type": "string",
@@ -430,6 +457,9 @@
           },
           "principalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.principalId.value]"
+          },
+          "createRoleAssignments": {
+            "value": "[parameters('createRoleAssignments')]"
           }
         },
         "template": {
@@ -439,7 +469,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "1108620803272758600"
+              "templateHash": "17306526377487282440"
             }
           },
           "parameters": {
@@ -488,6 +518,13 @@
               "metadata": {
                 "description": "Optional: The principal ID of the Managed Identity to assign roles to."
               }
+            },
+            "createRoleAssignments": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Optional: Set to true to create role assignments for Managed Identity."
+              }
             }
           },
           "resources": [
@@ -529,7 +566,7 @@
             {
               "type": "Microsoft.CognitiveServices/accounts/deployments",
               "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt4o')]",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt41')]",
               "sku": {
                 "name": "GlobalStandard",
                 "capacity": 1
@@ -537,8 +574,8 @@
               "properties": {
                 "model": {
                   "format": "OpenAI",
-                  "name": "gpt-4o",
-                  "version": "2024-11-20"
+                  "name": "gpt-4.1",
+                  "version": "2025-04-14"
                 }
               },
               "dependsOn": [
@@ -549,7 +586,47 @@
             {
               "type": "Microsoft.CognitiveServices/accounts/deployments",
               "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt4o-mini')]",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt41_mini')]",
+              "sku": {
+                "name": "GlobalStandard",
+                "capacity": 1
+              },
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "gpt-4.1-mini",
+                  "version": "2025-04-14"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt41')]",
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt4o')]",
+              "sku": {
+                "name": "Standard",
+                "capacity": 1
+              },
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "gpt-4o",
+                  "version": "2024-11-20"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt41_mini')]",
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt4o_mini')]",
               "sku": {
                 "name": "GlobalStandard",
                 "capacity": 1
@@ -612,7 +689,7 @@
               ]
             },
             {
-              "condition": "[not(empty(parameters('principalId')))]",
+              "condition": "[and(not(empty(parameters('principalId'))), parameters('createRoleAssignments'))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]",
@@ -668,6 +745,9 @@
           },
           "principalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.principalId.value]"
+          },
+          "createRoleAssignments": {
+            "value": "[parameters('createRoleAssignments')]"
           }
         },
         "template": {
@@ -677,7 +757,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "16451576683527289708"
+              "templateHash": "5679344381155260517"
             }
           },
           "parameters": {
@@ -708,6 +788,13 @@
               "metadata": {
                 "description": "Optional: The principal ID of the Managed Identity to assign roles to."
               }
+            },
+            "createRoleAssignments": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Optional: Set to true to create role assignments for Managed Identity."
+              }
             }
           },
           "resources": [
@@ -729,7 +816,7 @@
               }
             },
             {
-              "condition": "[not(empty(parameters('principalId')))]",
+              "condition": "[and(not(empty(parameters('principalId'))), parameters('createRoleAssignments'))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName'))]",
@@ -790,6 +877,9 @@
           },
           "principalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.principalId.value]"
+          },
+          "createRoleAssignments": {
+            "value": "[parameters('createRoleAssignments')]"
           }
         },
         "template": {
@@ -799,7 +889,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "3108835385241660355"
+              "templateHash": "11877283750269097800"
             }
           },
           "parameters": {
@@ -847,6 +937,13 @@
               "defaultValue": "",
               "metadata": {
                 "description": "Optional: The principal ID of the Managed Identity to assign roles to."
+              }
+            },
+            "createRoleAssignments": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Optional: Set to true to create role assignments for Managed Identity."
               }
             }
           },
@@ -935,7 +1032,7 @@
               ]
             },
             {
-              "condition": "[not(empty(parameters('principalId')))]",
+              "condition": "[and(not(empty(parameters('principalId'))), parameters('createRoleAssignments'))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
@@ -991,6 +1088,9 @@
           },
           "acaEnvSubnetId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.acaEnvSubnetId.value]"
+          },
+          "integrationSubnetId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.integrationSubnetId.value]"
           },
           "dnsZoneId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.dnsZoneIdApp.value]"
@@ -1051,7 +1151,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "11776838637009831454"
+              "templateHash": "3192312531163249961"
             }
           },
           "parameters": {
@@ -1067,6 +1167,13 @@
               "defaultValue": "",
               "metadata": {
                 "description": "Optional: Subnet ID to deploy a private endpoint for the Frontend App Service"
+              }
+            },
+            "integrationSubnetId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Subnet ID to deploy the VNet integration for the Frontend App Service"
               }
             },
             "acaEnvSubnetId": {
@@ -1389,9 +1496,11 @@
               "location": "[parameters('location')]",
               "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('aspName'))]",
+                "virtualNetworkSubnetId": "[if(not(empty(parameters('integrationSubnetId'))), parameters('integrationSubnetId'), null())]",
                 "publicNetworkAccess": "[if(not(empty(parameters('deployerIp'))), 'Enabled', parameters('publicNetworkAccess'))]",
                 "scmPublicNetworkAccess": "Enabled",
                 "siteConfig": {
+                  "vnetRouteAllEnabled": true,
                   "alwaysOn": true,
                   "linuxFxVersion": "NODE|20-lts",
                   "appCommandLine": "pm2 serve /home/site/wwwroot --no-daemon --spa",

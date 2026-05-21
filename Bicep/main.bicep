@@ -57,6 +57,9 @@ param location string = 'switzerlandnorth'
 @description('Optional: The IP address of the deployer to allow for deployment and access')
 param deployerIp string = ''
 
+@description('Set to true to create role assignments for Managed Identity. Set to false if you do not have User Access Administrator or Owner permissions.')
+param createRoleAssignments bool = false
+
 resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: rgName
   location: location
@@ -71,6 +74,15 @@ module network './modules/network/main.bicep' = {
   }
 }
 
+module identity './modules/identity/main.bicep' = {
+  name: 'identity'
+  scope: rg
+  params: {
+    location: rg.location
+    baseName: baseName
+  }
+}
+
 module openai './modules/openai/main.bicep' = {
   name: 'openai'
   scope: rg
@@ -79,6 +91,8 @@ module openai './modules/openai/main.bicep' = {
     subnetId: network.outputs.webSubnetId
     dnsZoneId: network.outputs.dnsZoneIdOpenAI
     openaiName: openaiName
+    principalId: identity.outputs.principalId
+    createRoleAssignments: createRoleAssignments
   }
 }
 
@@ -88,6 +102,8 @@ module docintel './modules/doc_intelligence/main.bicep' = {
   params: {
     location: rg.location
     docintelName: docintelName
+    principalId: identity.outputs.principalId
+    createRoleAssignments: createRoleAssignments
   }
 }
 
@@ -99,6 +115,8 @@ module storage './modules/storage/main.bicep' = {
     subnetId: network.outputs.dbSubnetId
     dnsZoneId: network.outputs.dnsZoneIdBlob
     storageAccountName: storageAccountName
+    principalId: identity.outputs.principalId
+    createRoleAssignments: createRoleAssignments
   }
 }
 
@@ -111,6 +129,7 @@ module app_service './modules/app_service/main.bicep' = {
 
     subnetId: network.outputs.appSubnetId
     acaEnvSubnetId: network.outputs.acaEnvSubnetId
+    integrationSubnetId: network.outputs.integrationSubnetId
     dnsZoneId: network.outputs.dnsZoneIdApp
 
     openai_endpoint: openai.outputs.openai_endpoint
@@ -130,6 +149,8 @@ module app_service './modules/app_service/main.bicep' = {
     aspName: aspName
     frontendAppName: frontendAppName
     deployerIp: deployerIp
+    identityId: identity.outputs.id
+    identityClientId: identity.outputs.clientId
   }
 }
 

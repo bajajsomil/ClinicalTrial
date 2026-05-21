@@ -17,6 +17,12 @@ param publicNetworkAccess string = 'Disabled'
 @description('The name of the OpenAI resource.')
 param openaiName string = 'clinicaltrialopenai909'
 
+@description('Optional: The principal ID of the Managed Identity to assign roles to.')
+param principalId string = ''
+
+@description('Optional: Set to true to create role assignments for Managed Identity.')
+param createRoleAssignments bool = false
+
 /*
 ========================================
 Azure OpenAI Account
@@ -65,56 +71,88 @@ resource delayScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
 
 /*
 ========================================
-GPT-4o Deployment
+OpenAI Models Deployment
 ========================================
 */
-resource gpt4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
-  parent: openai
-  name: 'gpt4o'
 
+resource gpt41 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+  parent: openai
+  name: 'gpt41'
   #disable-next-line no-unnecessary-dependson
   dependsOn: [
     delayScript
   ]
-
   sku: {
     name: 'GlobalStandard'
     capacity: 1
   }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: 'gpt-4.1'
+      version: '2025-04-14'
+    }
+    raiPolicyName: 'Microsoft.Default'
+  }
+}
 
+resource gpt41_mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+  parent: openai
+  name: 'gpt41_mini'
+  dependsOn: [
+    gpt41
+  ]
+  sku: {
+    name: 'GlobalStandard'
+    capacity: 1
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: 'gpt-4.1-mini'
+      version: '2025-04-14'
+    }
+    raiPolicyName: 'Microsoft.Default'
+  }
+}
+
+resource gpt4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+  parent: openai
+  name: 'gpt4o'
+  dependsOn: [
+    gpt41_mini
+  ]
+  sku: {
+    name: 'Standard'
+    capacity: 1
+  }
   properties: {
     model: {
       format: 'OpenAI'
       name: 'gpt-4o'
       version: '2024-11-20'
     }
+    raiPolicyName: 'Microsoft.Default'
   }
 }
 
-/*
-========================================
-GPT-4o Mini Deployment
-========================================
-*/
-resource gpt4oMini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+resource gpt4o_mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   parent: openai
-  name: 'gpt4o-mini'
-
+  name: 'gpt4o_mini'
   dependsOn: [
     gpt4o
   ]
-
   sku: {
     name: 'GlobalStandard'
     capacity: 1
   }
-
   properties: {
     model: {
       format: 'OpenAI'
       name: 'gpt-4o-mini'
       version: '2024-07-18'
     }
+    raiPolicyName: 'Microsoft.Default'
   }
 }
 
@@ -170,8 +208,23 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
 
 /*
 ========================================
-Outputs
+Role Assignment for Managed Identity
 ========================================
+*/
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId) && createRoleAssignments) {
+  name: guid(openai.id, principalId, 'Cognitive Services OpenAI User')
+  scope: openai
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4fbc-af51-cd5413fcf214')
+    principalId: principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+/*
+========================================
+Outputs
+=======================================
 */
 output openai_endpoint string = openai.properties.endpoint
 
