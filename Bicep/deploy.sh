@@ -3,7 +3,7 @@ set -e
 
 # Check if jq is installed (Best to do this first)
 if ! command -v jq &> /dev/null; then
-    echo "❌ Error: 'jq' is not installed. Please install it (e.g., 'apt-get install jq' or 'brew install jq')."
+    echo "Error: 'jq' is not installed. Please install it (e.g., 'apt-get install jq' or 'brew install jq')."
     exit 1
 fi
 
@@ -20,60 +20,42 @@ LOCATION=""
 # Check command line argument for base name first
 if [ ! -z "$1" ]; then
     BASE_NAME="$1"
-    echo "🎯 Using custom base name from argument: $BASE_NAME"
+    echo "Using custom base name from argument: $BASE_NAME"
 else
     # Interactive prompt with timeout for premium developer experience
-    echo -n "❓ Enter custom base name for resources [default: $DEFAULT_BASE_NAME] (timeout 10s): "
-    if read -t 10 input_val; then
+    echo -n "Enter custom base name for resources [default: $DEFAULT_BASE_NAME] (timeout 20s): "
+    if read -t 20 input_val; then
         BASE_NAME="$input_val"
     fi
     if [ -z "$BASE_NAME" ]; then
         BASE_NAME="$DEFAULT_BASE_NAME"
-        echo -e "\n⏰ Timeout or empty input. Using default: $BASE_NAME"
+        echo -e "\nTimeout or empty input. Using default: $BASE_NAME"
     else
-        echo "🎯 Using custom base name: $BASE_NAME"
+        echo "Using custom base name: $BASE_NAME"
     fi
 fi
 
 # Check command line argument for location second
 if [ ! -z "$2" ]; then
     LOCATION="$2"
-    echo "🎯 Using custom region from argument: $LOCATION"
+    echo "Using custom region from argument: $LOCATION"
 else
     # Interactive prompt with timeout for premium developer experience
-    echo -n "❓ Enter Azure region for deployment [default: $DEFAULT_LOCATION] (timeout 10s): "
-    if read -t 10 input_loc; then
+    echo -n "Enter Azure region for deployment [default: $DEFAULT_LOCATION] (timeout 20s): "
+    if read -t 20 input_loc; then
         LOCATION="$input_loc"
     fi
     if [ -z "$LOCATION" ]; then
         LOCATION="$DEFAULT_LOCATION"
-        echo -e "\n⏰ Timeout or empty input. Using default: $LOCATION"
+        echo -e "\nTimeout or empty input. Using default: $LOCATION"
     else
-        echo "🎯 Using region: $LOCATION"
+        echo "Using region: $LOCATION"
     fi
 fi
 
-# Check command line argument for user allowed IP third
-USER_ALLOWED_IP=""
-if [ ! -z "$3" ]; then
-    USER_ALLOWED_IP="$3"
-    echo "🎯 Using custom whitelisted IP from argument: $USER_ALLOWED_IP"
-else
-    # Interactive prompt with timeout for premium developer experience
-    echo -n "❓ Enter an IP address or CIDR range to whitelist (e.g. 203.0.113.5/32) [default: none] (timeout 10s): "
-    if read -t 10 input_ip; then
-        USER_ALLOWED_IP="$input_ip"
-    fi
-    if [ -z "$USER_ALLOWED_IP" ]; then
-        echo -e "\n⏰ Timeout or empty input. No additional IP whitelisted."
-    else
-        echo "🎯 Using whitelisted IP: $USER_ALLOWED_IP"
-    fi
-fi
-
+# Clean carriage returns from any input or script line endings
 BASE_NAME=$(echo "$BASE_NAME" | tr -d '\r')
 LOCATION=$(echo "$LOCATION" | tr -d '\r')
-USER_ALLOWED_IP=$(echo "$USER_ALLOWED_IP" | tr -d '\r')
 
 # Sanitize and construct dynamic names
 RESOURCE_GROUP=$(echo "${BASE_NAME}-rg" | tr -d '\r')
@@ -91,7 +73,7 @@ IMAGE_NAME="backend-api"
 IMAGE_TAG=$(date +%s | tr -d '\r')
 
 echo "================================================="
-echo "🚀 Starting Clinical Deployment (Bicep + ACA)"
+echo "Starting Clinical Deployment (Bicep + ACA)"
 echo "   Base Name:     $BASE_NAME"
 echo "   Resource Group: $RESOURCE_GROUP"
 echo "   ACR Name:      $ACR_NAME"
@@ -100,7 +82,7 @@ echo "   UI App Service: $UI_NAME"
 echo "   Region/Location: $LOCATION"
 echo "================================================="
 
-echo "🏗️ Deploying Infrastructure..."
+echo "Deploying Infrastructure..."
 
 ACCOUNT_TYPE=$(az account show --query user.type -o tsv | tr -d '\r')
 ACCOUNT_NAME=$(az account show --query user.name -o tsv | tr -d '\r')
@@ -115,15 +97,15 @@ fi
 MSGRAPH_SP_ID=$(az ad sp list --display-name "Microsoft Graph" --query "[0].id" -o tsv | tr -d '\r')
 
 # Fetch deployer's public IP
-echo "🔍 Fetching deployer public IP..."
+echo "Fetching deployer public IP..."
 DEPLOYER_IP=$(curl -s https://api.ipify.org | tr -d '\r')
 if [ -z "$DEPLOYER_IP" ]; then
     DEPLOYER_IP=$(curl -s https://ifconfig.me | tr -d '\r')
 fi
 if [ -z "$DEPLOYER_IP" ]; then
-    echo "⚠️ Warning: Failed to fetch deployer public IP. App Service deployment might fail if public access is restricted."
+    echo "Warning: Failed to fetch deployer public IP. App Service deployment might fail if public access is restricted."
 else
-    echo "🎯 Deployer Public IP: $DEPLOYER_IP"
+    echo "Deployer Public IP: $DEPLOYER_IP"
 fi
 
 DEPLOY_NAME="clinical-trial-deployment-$(date +%s)"
@@ -144,7 +126,6 @@ DEPLOYMENT_OUTPUT=$(az deployment sub create \
     storageAccountName="$STORAGE_ACCOUNT_NAME" \
     location="$LOCATION" \
     deployerIp="$DEPLOYER_IP" \
-    userAllowedIp="$USER_ALLOWED_IP" \
   --output json | tr -d '\r')
 
 
@@ -156,14 +137,14 @@ ENTRA_TENANT_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs.entra_t
 ENTRA_CLIENT_SECRET=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs.entra_client_secret.value')
 
 if [ "$ENTRA_CLIENT_SECRET" == "placeholder" ] && [ ! -z "$ENTRA_CLIENT_ID" ] && [ "$ENTRA_CLIENT_ID" != "null" ]; then
-    echo "🔑 Generating real Entra ID Client Secret dynamically via service actions..."
+    echo "Generating real Entra ID Client Secret dynamically via service actions..."
     # Wrap in || true to prevent script from crashing if command fails
     ENTRA_CLIENT_SECRET=$(az ad app credential reset --id "$ENTRA_CLIENT_ID" --append --display-name "ClinicalAppSecret" --query password -o tsv 2>/dev/null | tr -d '\r') || true
 fi
 
 # Ensure Entra variables are not empty or null to avoid deployment crashes
 if [ -z "$ENTRA_CLIENT_SECRET" ] || [ "$ENTRA_CLIENT_SECRET" == "null" ]; then
-    echo "⚠️ Warning: Entra ID Client Secret is empty or null. Using placeholder."
+    echo "Warning: Entra ID Client Secret is empty or null. Using placeholder."
     ENTRA_CLIENT_SECRET="placeholder-secret-value"
 fi
 
@@ -175,7 +156,7 @@ if [ -z "$ENTRA_TENANT_ID" ] || [ "$ENTRA_TENANT_ID" == "null" ]; then
     ENTRA_TENANT_ID="placeholder-tenant-id"
 fi
 
-echo "✅ Backend Host: $BACKEND_HOST"
+echo "Backend Host: $BACKEND_HOST"
 
 # # --- Dynamic Scaling for Azure OpenAI Model Deployments ---
 # scale_deployment_to_max() {
@@ -192,7 +173,7 @@ echo "✅ Backend Host: $BACKEND_HOST"
 #       --output json 2>/dev/null)
 
 #     if [ -z "$dep_info" ]; then
-#         echo "   ⚠️ Warning: Could not find deployment info for '$dep_name'. Skipping dynamic scaling."
+#         echo "   Warning: Could not find deployment info for '$dep_name'. Skipping dynamic scaling."
 #         return 0
 #     fi
 
@@ -236,7 +217,7 @@ echo "✅ Backend Host: $BACKEND_HOST"
 #               [($max | tonumber), (($rem | tonumber) + ($cur | tonumber))] | min | floor
 #             ')
 #         else
-#             echo "   ⚠️ Quota item '$quota_key' not found in regional usage list. Using default maximum."
+#             echo "   Quota item '$quota_key' not found in regional usage list. Using default maximum."
 #         fi
 #     fi
 
@@ -244,7 +225,7 @@ echo "✅ Backend Host: $BACKEND_HOST"
 #         target_cap=1
 #     fi
 
-#     echo "📈 Scaling '$dep_name' ($sku_name $model_name) to target capacity of ${target_cap}k TPM..."
+#     echo "Scaling '$dep_name' ($sku_name $model_name) to target capacity of ${target_cap}k TPM..."
 
 #     # 3. Perform a single update call with transparent error capture
 #     local update_err
@@ -257,12 +238,12 @@ echo "✅ Backend Host: $BACKEND_HOST"
 #       --query "sku.capacity" -o tsv 2>&1)
 
 #     if [ $? -eq 0 ]; then
-#         echo "   ✅ Successfully scaled '$dep_name' to ${target_cap}k TPM!"
+#         echo "   Successfully scaled '$dep_name' to ${target_cap}k TPM!"
 #         return 0
 #     else
-#         echo "   ❌ Failed to scale to ${target_cap}k TPM. Error: $update_err"
+#         echo "   Failed to scale to ${target_cap}k TPM. Error: $update_err"
 #         if [ "$target_cap" -gt 1 ]; then
-#             echo "   🔄 Falling back to safe capacity of 1k TPM..."
+#             echo "   Falling back to safe capacity of 1k TPM..."
 #             if az resource update \
 #               --resource-group "$RESOURCE_GROUP" \
 #               --resource-type "Microsoft.CognitiveServices/accounts/deployments" \
@@ -270,16 +251,16 @@ echo "✅ Backend Host: $BACKEND_HOST"
 #               --name "$dep_name" \
 #               --set sku.capacity=1 \
 #               --query "sku.capacity" -o tsv >/dev/null 2>&1; then
-#                 echo "   ✅ Successfully scaled '$dep_name' to 1k TPM!"
+#                 echo "   Successfully scaled '$dep_name' to 1k TPM!"
 #                 return 0
 #             else
-#                 echo "   ⚠️ Warning: Could not scale '$dep_name' beyond Bicep default capacity."
+#                 echo "   Warning: Could not scale '$dep_name' beyond Bicep default capacity."
 #             fi
 #         fi
 #     fi
 # }
 
-# echo -e "\n⚙️ Scaling OpenAI Model Capacities..."
+# echo -e "\nScaling OpenAI Model Capacities..."
 # # Query regional Cognitive Services usages once to prevent ARM rate limits (429)
 # USAGES_JSON=$(az cognitiveservices usage list --location "$LOCATION" --output json 2>/dev/null || echo "[]")
 
@@ -288,7 +269,7 @@ echo "✅ Backend Host: $BACKEND_HOST"
 # scale_deployment_to_max "gpt4o"
 # scale_deployment_to_max "gpt4o_mini"
 
-echo -e "\n🐳 Building & Pushing Docker Image..."
+echo -e "\nBuilding & Pushing Docker Image..."
 
 cd ../backend
 
@@ -300,7 +281,7 @@ FULL_IMAGE_NAME="$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG"
 docker build -t $FULL_IMAGE_NAME .
 docker push $FULL_IMAGE_NAME
 
-echo -e "\n🚀 Updating Container App..."
+echo -e "\nUpdating Container App..."
 
 az containerapp update \
   --name $ACA_NAME \
@@ -310,7 +291,7 @@ az containerapp update \
     BACKEND_URL="https://${BACKEND_HOST}" \
     FRONTEND_URL="https://${FRONTEND_HOST}"
 
-echo "🔐 Injecting Entra into Container App..."
+echo "Injecting Entra into Container App..."
 
 az containerapp secret set \
   --name $ACA_NAME \
@@ -324,7 +305,7 @@ az containerapp update \
     ENTRA_CLIENT_ID="$ENTRA_CLIENT_ID" \
     ENTRA_TENANT_ID="$ENTRA_TENANT_ID"
 
-echo "🛡️ Applying CORS..."
+echo "Applying CORS..."
 az containerapp ingress cors update \
   --name $ACA_NAME \
   --resource-group $RESOURCE_GROUP \
@@ -352,25 +333,33 @@ az webapp deploy \
   --src-path ../frontend.zip \
   --type zip
 
-# Whitelisting option at the end of deployment
-echo -e "\n🛡️ Access Security Configuration:"
-if [ -n "$USER_ALLOWED_IP" ]; then
-    echo "🔒 Whitelisting $USER_ALLOWED_IP on Frontend App Service $UI_NAME..."
-    az webapp config access-restriction add \
-      --resource-group "$RESOURCE_GROUP" \
-      --name "$UI_NAME" \
-      --rule-name "UserWhitelistedIp" \
-      --action Allow \
-      --ip-address "$USER_ALLOWED_IP" \
-      --priority 200 \
-      --description "Allow access from user whitelisted IP address space"
-    echo "✅ Whitelisted successfully!"
+# Access Security Configuration
+echo -e "\nAccess Security Configuration:"
+echo -n "Do you want to whitelist an IP address/CIDR block on the Frontend App Service? (y/n) [default: n]: "
+read -r whitelist_choice
+if [[ "$whitelist_choice" =~ ^[Yy]$ ]]; then
+    echo -n "Enter the IP address or CIDR range to whitelist (e.g. 192.168.1.0/24 or 203.0.113.5/32): "
+    read -r whitelist_ip
+    if [ ! -z "$whitelist_ip" ]; then
+        echo "Whitelisting $whitelist_ip on Frontend App Service $UI_NAME..."
+        az webapp config access-restriction add \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "$UI_NAME" \
+          --rule-name "UserWhitelistedIp" \
+          --action Allow \
+          --ip-address "$whitelist_ip" \
+          --priority 200 \
+          --description "Allow access from user whitelisted IP address space"
+        echo "Whitelisted successfully!"
+    else
+        echo "Warning: No IP address provided. Skipping whitelisting."
+    fi
 else
-    echo "⏭️ Skipping IP whitelisting on App Service (no IP provided)."
+    echo "Skipping IP whitelisting."
 fi
 
 echo "================================================="
-echo "🎉 Deployment Complete!"
-echo "🌐 Frontend: https://${FRONTEND_HOST}"
-echo "⚙️ Backend: https://${BACKEND_HOST}"
+echo "Deployment Complete!"
+echo "   Frontend: https://${FRONTEND_HOST}"
+echo "   Backend: https://${BACKEND_HOST}"
 echo "================================================="
