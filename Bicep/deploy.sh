@@ -318,6 +318,7 @@ cd ../frontend
 cat <<EOF > .env
 VITE_BACKEND_URL=https://${BACKEND_HOST}
 VITE_BLOB_STORAGE_URL=https://${STORAGE_NAME}.blob.core.windows.net
+VITE_PHARMA_CONTAINER_URL=https://${STORAGE_NAME}.blob.core.windows.net/pharma
 EOF
 
 npm install --quiet
