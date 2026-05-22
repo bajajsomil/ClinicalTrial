@@ -89,8 +89,10 @@ ACCOUNT_NAME=$(az account show --query user.name -o tsv | tr -d '\r')
 
 if [ "$ACCOUNT_TYPE" == "user" ]; then
     CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv | tr -d '\r')
+    CURRENT_USER_PRINCIPAL_TYPE="User"
 else
     CURRENT_USER_ID=$(az ad sp show --id "$ACCOUNT_NAME" --query id -o tsv | tr -d '\r')
+    CURRENT_USER_PRINCIPAL_TYPE="ServicePrincipal"
 fi
 
 # Fixed double quote issue for SP query
@@ -117,6 +119,7 @@ DEPLOYMENT_OUTPUT=$(az deployment sub create \
   --template-file main.bicep \
   --parameters \
     currentUserId="$CURRENT_USER_ID" \
+    currentUserPrincipalType="$CURRENT_USER_PRINCIPAL_TYPE" \
     msgraphSpObjectId="$MSGRAPH_SP_ID" \
     baseName="$BASE_NAME" \
     rgName="$RESOURCE_GROUP" \

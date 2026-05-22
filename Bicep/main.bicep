@@ -12,6 +12,9 @@ output entra_client_secret string = entra_id.outputs.client_secret
 @description('The Object ID of the user or Service Principal running the deployment')
 param currentUserId string
 
+@description('The principal type of the deployer')
+param currentUserPrincipalType string = 'ServicePrincipal'
+
 @description('The Object ID of the Microsoft Graph Service Principal in your tenant')
 param msgraphSpObjectId string
 
@@ -149,6 +152,7 @@ module keyvault './modules/keyvault/main.bicep' = {
     location: rg.location
     principalId: identity.outputs.principalId
     currentUserId: currentUserId
+    currentUserPrincipalType: currentUserPrincipalType
     subnetId: network.outputs.dbSubnetId
     dnsZoneId: network.outputs.dnsZoneIdKeyVault
     logAnalyticsWorkspaceId: monitoring.outputs.lawId

@@ -10,6 +10,9 @@ param principalId string
 @description('The Object ID of the deployer to grant Secrets Officer access.')
 param currentUserId string
 
+@description('The principal type of the deployer.')
+param currentUserPrincipalType string = 'ServicePrincipal'
+
 @description('Optional: Subnet ID for the Private Endpoint.')
 param subnetId string = ''
 
@@ -91,7 +94,7 @@ resource secretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = 
   name: guid(vault.id, principalId, 'Key Vault Secrets User')
   scope: vault
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633014f-17de-419a-b87d-4885ed2ac485')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
     principalId: principalId
     principalType: 'ServicePrincipal'
   }
@@ -104,7 +107,7 @@ resource secretsOfficerRole 'Microsoft.Authorization/roleAssignments@2022-04-01'
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
     principalId: currentUserId
-    principalType: 'ServicePrincipal'
+    principalType: currentUserPrincipalType
   }
 }
 

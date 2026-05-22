@@ -102,7 +102,7 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = i
   name: guid(storageAccount.id, principalId, 'Storage Blob Data Contributor')
   scope: storageAccount
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92e5b2-2d11-453d-a403-e96b0029c9fe')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
     principalId: principalId
     principalType: 'ServicePrincipal'
   }

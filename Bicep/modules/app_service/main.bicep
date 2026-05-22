@@ -116,7 +116,7 @@ resource backend 'Microsoft.App/containerApps@2023-05-01' = {
         }
         {
           name: 'azure-client-secret'
-          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/entra-client-secret'
+          keyVaultUrl: 'https://${keyVaultName}.${environment().suffixes.keyvaultDns}/secrets/entra-client-secret'
           identity: identityId
         }
       ]
