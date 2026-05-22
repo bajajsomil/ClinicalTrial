@@ -61,7 +61,7 @@ param deployerIp string = ''
 param userAllowedIp string = ''
 
 @description('Set to true to create role assignments for Managed Identity. Set to false if you do not have User Access Administrator or Owner permissions.')
-param createRoleAssignments bool = false
+param createRoleAssignments bool = true
 
 resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: rgName
@@ -85,6 +85,7 @@ module network './modules/network/main.bicep' = {
     vnetName: vnetName
     deployerIp: deployerIp
     userAllowedIp: userAllowedIp
+    logAnalyticsWorkspaceId: monitoring.outputs.lawId
   }
 }
 
@@ -135,6 +136,22 @@ module storage './modules/storage/main.bicep' = {
     storageAccountName: storageAccountName
     principalId: identity.outputs.principalId
     createRoleAssignments: createRoleAssignments
+    logAnalyticsWorkspaceId: monitoring.outputs.lawId
+  }
+}
+
+// deploy Azure Key Vault for application secrets using User Assigned MSI
+module keyvault './modules/keyvault/main.bicep' = {
+  name: 'keyvault'
+  scope: rg
+  params: {
+    vaultName: '${baseName}-kv'
+    location: rg.location
+    principalId: identity.outputs.principalId
+    currentUserId: currentUserId
+    subnetId: network.outputs.dbSubnetId
+    dnsZoneId: network.outputs.dnsZoneIdKeyVault
+    logAnalyticsWorkspaceId: monitoring.outputs.lawId
   }
 }
 
@@ -151,14 +168,8 @@ module app_service './modules/app_service/main.bicep' = {
     dnsZoneId: network.outputs.dnsZoneIdApp
 
     openai_endpoint: openai.outputs.openai_endpoint
-    openai_api_key: openai.outputs.openai_api_key
-
     docintel_endpoint: docintel.outputs.formrecognizer_endpoint
-    docintel_api_key: docintel.outputs.formrecognizer_api_key
-
     storage_account_name: storage.outputs.storage_account_name
-    storage_access_key: storage.outputs.storage_primary_access_key
-    storage_connection_string: storage.outputs.storage_connection_string
 
     acrName: acrName
     lawName: lawName
@@ -169,6 +180,7 @@ module app_service './modules/app_service/main.bicep' = {
     deployerIp: deployerIp
     identityId: identity.outputs.id
     identityClientId: identity.outputs.clientId
+    keyVaultName: '${baseName}-kv'
   }
 }
 

@@ -250,7 +250,4 @@ Outputs
 */
 output openai_endpoint string = openai.properties.endpoint
 
-#disable-next-line outputs-should-not-contain-secrets
-output openai_api_key string = openai.listKeys().key1
-
 output openai_api_version string = '2024-02-15-preview'

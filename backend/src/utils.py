@@ -7,6 +7,7 @@ from typing import List, Tuple
 from config.config import Config
 from openpyxl import load_workbook
 from deepeval.models import AzureOpenAIModel
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from src.utils_helper import timing_decorator
 from src.adapters.azure_openai import batch_client
 from src.prompts.system import get_prompt_template
@@ -14,14 +15,28 @@ from src.adapters.logger import log_with_span
 from src.adapters.azure_document_intelligence import document_intelligence
 
 # Initialize the Azure OpenAI model used for text generation and JSON extraction
-model = AzureOpenAIModel(
-    model_name=Config.GPT_GENERATION_4O_MODEL,
-    deployment_name=Config.GPT_GENERATION_4O_MODEL,
-    azure_openai_api_key=Config.AZURE_OPENAI_KEY,
-    openai_api_version=Config.AZURE_OPENAI_VERSION,
-    azure_endpoint=Config.AZURE_OPENAI_ENDPOINT,
-    temperature=0
-)
+if Config.AZURE_OPENAI_KEY:
+    model = AzureOpenAIModel(
+        model_name=Config.GPT_GENERATION_4O_MODEL,
+        deployment_name=Config.GPT_GENERATION_4O_MODEL,
+        azure_openai_api_key=Config.AZURE_OPENAI_KEY,
+        openai_api_version=Config.AZURE_OPENAI_VERSION,
+        azure_endpoint=Config.AZURE_OPENAI_ENDPOINT,
+        temperature=0
+    )
+else:
+    token_provider = get_bearer_token_provider(
+        DefaultAzureCredential(),
+        "https://cognitiveservices.azure.com/.default"
+    )
+    model = AzureOpenAIModel(
+        model_name=Config.GPT_GENERATION_4O_MODEL,
+        deployment_name=Config.GPT_GENERATION_4O_MODEL,
+        azure_ad_token_provider=token_provider,
+        openai_api_version=Config.AZURE_OPENAI_VERSION,
+        azure_endpoint=Config.AZURE_OPENAI_ENDPOINT,
+        temperature=0
+    )
 
 
 @timing_decorator

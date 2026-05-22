@@ -23,6 +23,9 @@ param principalId string = ''
 @description('Optional: Set to true to create role assignments for Managed Identity.')
 param createRoleAssignments bool = false
 
+@description('Optional: Log Analytics Workspace ID for diagnostic settings.')
+param logAnalyticsWorkspaceId string = ''
+
 // --- Storage Account ---
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
@@ -105,14 +108,43 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = i
   }
 }
 
+// --- Diagnostic Settings ---
+resource storageDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(logAnalyticsWorkspaceId)) {
+  name: '${storageAccountName}-diagnostics'
+  scope: storageAccount
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    metrics: [
+      {
+        category: 'Transaction'
+        enabled: true
+      }
+    ]
+  }
+}
+
+resource blobDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(logAnalyticsWorkspaceId)) {
+  name: '${storageAccountName}-blob-diagnostics'
+  scope: blobServices
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        category: 'StorageRead'
+        enabled: true
+      }
+      {
+        category: 'StorageWrite'
+        enabled: true
+      }
+      {
+        category: 'StorageDelete'
+        enabled: true
+      }
+    ]
+  }
+}
+
 // --- Outputs ---
 
 output storage_account_name string = storageAccount.name
-
-// Retrieve the primary key using listKeys()
-var storageKey = storageAccount.listKeys().keys[0].value
-output storage_primary_access_key string = storageKey
-
-// Construct the connection string manually
-output storage_connection_string string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageKey};EndpointSuffix=${environment().suffixes.storage}'
-

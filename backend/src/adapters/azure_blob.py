@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 from azure.storage.blob import BlobServiceClient, BlobClient, ContentSettings
+from azure.identity import DefaultAzureCredential
 from config.config import Config
 from src.adapters.logger import log_with_span
 from src.processes.protocol_analyzer.models import BlobUploadInput
@@ -14,13 +15,27 @@ class AzureBlob:
 
     def __init__(self) -> None:
         """
-        Initialize the AzureBlob instance with a connection string.
-        Creates a BlobServiceClient for further operations.
+        Initialize the AzureBlob instance.
+        Uses DefaultAzureCredential with storage account name if available,
+        otherwise falls back to connection string.
         """
+        self.storage_account_name = Config.STORAGE_ACCOUNT_NAME
         self.connection_string: str = Config.blob_connection_string
-        self.blob_service_client: BlobServiceClient = (
-            BlobServiceClient.from_connection_string(self.connection_string)
-        )
+
+        if self.storage_account_name:
+            account_url = f"https://{self.storage_account_name}.blob.core.windows.net"
+            self.blob_service_client = BlobServiceClient(
+                account_url=account_url,
+                credential=DefaultAzureCredential()
+            )
+        elif self.connection_string:
+            self.blob_service_client = BlobServiceClient.from_connection_string(
+                self.connection_string
+            )
+        else:
+            raise ValueError(
+                "Either STORAGE_ACCOUNT_NAME or STORAGE_CONNECTION_STRING must be set."
+            )
 
     def initialize_blob_client(self, container_name: str, file_name: str) -> Optional[BlobClient]:
         """

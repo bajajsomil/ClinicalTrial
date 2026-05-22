@@ -4,6 +4,7 @@ import random
 import math
 from typing import List, Tuple
 from openai import AsyncAzureOpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 import json
 from config.config import Config
 from src.models import DecodeJsonResult, AzureResponseModel
@@ -20,11 +21,23 @@ class AzureOpenAIHelper:
         self.azure_endpoint = Config.AZURE_OPENAI_ENDPOINT
         self.api_key = Config.AZURE_OPENAI_KEY
         self.api_version = Config.AZURE_OPENAI_VERSION
-        self.client = AsyncAzureOpenAI(
-            azure_endpoint=self.azure_endpoint,
-            api_key=self.api_key,
-            api_version=self.api_version,
-        )
+
+        if self.api_key:
+            self.client = AsyncAzureOpenAI(
+                azure_endpoint=self.azure_endpoint,
+                api_key=self.api_key,
+                api_version=self.api_version,
+            )
+        else:
+            token_provider = get_bearer_token_provider(
+                DefaultAzureCredential(),
+                "https://cognitiveservices.azure.com/.default"
+            )
+            self.client = AsyncAzureOpenAI(
+                azure_endpoint=self.azure_endpoint,
+                azure_ad_token_provider=token_provider,
+                api_version=self.api_version,
+            )
 
         log_with_span(
             message="Initialized AzureOpenAIHelper",

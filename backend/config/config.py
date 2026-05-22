@@ -14,6 +14,7 @@ class Config:
     AZURE_DOCUMENT_INTELLIGENCE_KEY = os.getenv("DOCINTEL_API_KEY")
 
     # ===== Storage =====
+    STORAGE_ACCOUNT_NAME = os.getenv("STORAGE_ACCOUNT_NAME")
     blob_connection_string = os.getenv("STORAGE_CONNECTION_STRING")
     blob_container_name = "pharma"  # keep static
 

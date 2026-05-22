@@ -45,28 +45,15 @@ param frontendAppName string = 'clinical-trial-ui909'
 param openai_endpoint string
 param docintel_endpoint string
 
-@secure()
-param openai_api_key string
-
-@secure()
-param docintel_api_key string
-
 param storage_account_name string
-
-@secure()
-param storage_access_key string
-
-@secure()
-param storage_connection_string string
 
 param azure_client_id string = ''
 param azure_tenant_id string = ''
 
-@secure()
-param azure_client_secret string = ''
-
 param identityId string = ''
 param identityClientId string = ''
+
+param keyVaultName string
 
 // ==========================================
 // 1. NEW BACKEND: AZURE CONTAINER APPS
@@ -128,24 +115,9 @@ resource backend 'Microsoft.App/containerApps@2023-05-01' = {
           value: acr.listCredentials().passwords[0].value
         }
         {
-          name: 'openai-api-key'
-          value: openai_api_key
-        }
-        {
-          name: 'docintel-api-key'
-          value: docintel_api_key
-        }
-        {
-          name: 'storage-access-key'
-          value: storage_access_key
-        }
-        {
-          name: 'storage-connection-string'
-          value: storage_connection_string
-        }
-        {
           name: 'azure-client-secret'
-          value: empty(azure_client_secret) ? 'placeholder' : azure_client_secret
+          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/entra-client-secret'
+          identity: identityId
         }
       ]
       registries: [
@@ -196,10 +168,6 @@ resource backend 'Microsoft.App/containerApps@2023-05-01' = {
               value: openai_endpoint
             }
             {
-              name: 'OPENAI_API_KEY'
-              secretRef: 'openai-api-key'
-            }
-            {
               name: 'OPENAI_API_VERSION'
               value: '2024-02-15-preview'
             }
@@ -208,24 +176,12 @@ resource backend 'Microsoft.App/containerApps@2023-05-01' = {
               value: docintel_endpoint
             }
             {
-              name: 'DOCINTEL_API_KEY'
-              secretRef: 'docintel-api-key'
-            }
-            {
               name: 'DOCINTEL_API_VERSION'
               value: '2023-10-01'
             }
             {
               name: 'STORAGE_ACCOUNT_NAME'
               value: storage_account_name
-            }
-            {
-              name: 'STORAGE_ACCOUNT_KEY'
-              secretRef: 'storage-access-key'
-            }
-            {
-              name: 'STORAGE_CONNECTION_STRING'
-              secretRef: 'storage-connection-string'
             }
             {
               name: 'ENTRA_CLIENT_ID'
@@ -251,6 +207,25 @@ resource backend 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
     }
+  }
+}
+
+// --- Container App Diagnostics ---
+resource backendDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${backendAppName}-diagnostics'
+  scope: backend
+  properties: {
+    workspaceId: law.id
+    logs: [
+      {
+        category: 'ContainerAppConsoleLogs'
+        enabled: true
+      }
+      {
+        category: 'ContainerAppSystemLogs'
+        enabled: true
+      }
+    ]
   }
 }
 
@@ -345,6 +320,7 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
     ]
   }
 }
+
 resource webAppDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: '${frontendAppName}-diagnostics'
   scope: frontend
@@ -356,16 +332,8 @@ resource webAppDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
         enabled: true
       }
     ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-      }
-    ]
   }
 }
 
-// --- Outputs: Required by the Bash Script ---
 output backend_hostname string = backend.properties.configuration.ingress.fqdn
-output storage_account_name string = storage_account_name
 output frontend_hostname string = frontend.properties.defaultHostName

@@ -11,6 +11,7 @@ from PyPDF2 import PdfWriter, PdfReader
 from azure.core.exceptions import AzureError
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient, AnalyzeResult, DocumentTable
+from azure.identity import DefaultAzureCredential
 from config.config import Config
 from src.adapters.logger import log_with_span
 from src.models import DocumentExtractionResult, PageExtractionResult
@@ -27,12 +28,17 @@ class DocumentIntelligence:
             self.api_key: str = Config.AZURE_DOCUMENT_INTELLIGENCE_KEY
             self.endpoint: str = Config.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
 
-            if not self.api_key or not self.endpoint:
-                raise ValueError("Azure Document Intelligence credentials are missing.")
+            if not self.endpoint:
+                raise ValueError("Azure Document Intelligence endpoint is missing.")
+
+            if self.api_key:
+                credential = AzureKeyCredential(self.api_key)
+            else:
+                credential = DefaultAzureCredential()
 
             self.client: DocumentAnalysisClient = DocumentAnalysisClient(
                 endpoint=self.endpoint,
-                credential=AzureKeyCredential(self.api_key),
+                credential=credential,
                 headers={"x-ms-useragent": "azure-search-chat-demo/1.0.0"},
             )
 

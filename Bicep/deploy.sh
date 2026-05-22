@@ -291,12 +291,14 @@ az containerapp update \
     BACKEND_URL="https://${BACKEND_HOST}" \
     FRONTEND_URL="https://${FRONTEND_HOST}"
 
-echo "Injecting Entra into Container App..."
+echo "Injecting Entra Client Secret into Key Vault..."
 
-az containerapp secret set \
-  --name $ACA_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --secrets "azure-client-secret=$ENTRA_CLIENT_SECRET"
+az keyvault secret set \
+  --vault-name "${BASE_NAME}-kv" \
+  --name "entra-client-secret" \
+  --value "$ENTRA_CLIENT_SECRET"
+
+echo "Updating Container App Entra configuration..."
 
 az containerapp update \
   --name $ACA_NAME \
