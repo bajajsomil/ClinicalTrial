@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "16989318894710188256"
+      "templateHash": "1622438497778419913"
     }
   },
   "parameters": {
@@ -13,6 +13,13 @@
       "type": "string",
       "metadata": {
         "description": "The Object ID of the user or Service Principal running the deployment"
+      }
+    },
+    "currentUserPrincipalType": {
+      "type": "string",
+      "defaultValue": "ServicePrincipal",
+      "metadata": {
+        "description": "The principal type of the deployer"
       }
     },
     "msgraphSpObjectId": {
@@ -128,9 +135,16 @@
     },
     "createRoleAssignments": {
       "type": "bool",
-      "defaultValue": false,
+      "defaultValue": true,
       "metadata": {
         "description": "Set to true to create role assignments for Managed Identity. Set to false if you do not have User Access Administrator or Owner permissions."
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "[format('{0}-kv', parameters('baseName'))]",
+      "metadata": {
+        "description": "The name of the Key Vault"
       }
     }
   },
@@ -235,6 +249,9 @@
           },
           "userAllowedIp": {
             "value": "[parameters('userAllowedIp')]"
+          },
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.lawId.value]"
           }
         },
         "template": {
@@ -244,7 +261,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "12463844634264366637"
+              "templateHash": "4746041572888814106"
             }
           },
           "parameters": {
@@ -275,6 +292,13 @@
               "metadata": {
                 "description": "Optional: Additional user allowed IP address or CIDR to whitelist"
               }
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Log Analytics Workspace ID for diagnostic settings."
+              }
             }
           },
           "variables": {
@@ -283,9 +307,9 @@
                 "name": "Allow-AppSubnet-Inbound",
                 "properties": {
                   "description": "Allow inbound from application subnet",
-                  "protocol": "*",
+                  "protocol": "Tcp",
                   "sourcePortRange": "*",
-                  "destinationPortRange": "*",
+                  "destinationPortRange": "443",
                   "sourceAddressPrefix": "10.0.1.0/24",
                   "destinationAddressPrefix": "10.0.2.0/24",
                   "access": "Allow",
@@ -297,9 +321,9 @@
                 "name": "Allow-DbSubnet-Inbound",
                 "properties": {
                   "description": "Allow inbound from db subnet",
-                  "protocol": "*",
+                  "protocol": "Tcp",
                   "sourcePortRange": "*",
-                  "destinationPortRange": "*",
+                  "destinationPortRange": "443",
                   "sourceAddressPrefix": "10.0.3.0/24",
                   "destinationAddressPrefix": "10.0.2.0/24",
                   "access": "Allow",
@@ -311,9 +335,9 @@
                 "name": "Allow-AcaEnvSubnet-Inbound",
                 "properties": {
                   "description": "Allow inbound from Container App Environment subnet (required for backend to access OpenAI)",
-                  "protocol": "*",
+                  "protocol": "Tcp",
                   "sourcePortRange": "*",
-                  "destinationPortRange": "*",
+                  "destinationPortRange": "443",
                   "sourceAddressPrefix": "10.0.0.0/24",
                   "destinationAddressPrefix": "10.0.2.0/24",
                   "access": "Allow",
@@ -322,8 +346,8 @@
                 }
               }
             ],
-            "deployerRule": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('name', 'Allow-DeployerIp-Inbound', 'properties', createObject('description', 'Allow inbound from deployer public IP', 'protocol', '*', 'sourcePortRange', '*', 'destinationPortRange', '*', 'sourceAddressPrefix', if(contains(parameters('deployerIp'), '/'), parameters('deployerIp'), format('{0}/32', parameters('deployerIp'))), 'destinationAddressPrefix', '10.0.2.0/24', 'access', 'Allow', 'priority', 120, 'direction', 'Inbound'))), createArray())]",
-            "userAllowedRule": "[if(not(empty(parameters('userAllowedIp'))), createArray(createObject('name', 'Allow-UserAllowedIp-Inbound', 'properties', createObject('description', 'Allow inbound from user allowed IP', 'protocol', '*', 'sourcePortRange', '*', 'destinationPortRange', '*', 'sourceAddressPrefix', if(contains(parameters('userAllowedIp'), '/'), parameters('userAllowedIp'), format('{0}/32', parameters('userAllowedIp'))), 'destinationAddressPrefix', '10.0.2.0/24', 'access', 'Allow', 'priority', 130, 'direction', 'Inbound'))), createArray())]",
+            "deployerRule": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('name', 'Allow-DeployerIp-Inbound', 'properties', createObject('description', 'Allow inbound from deployer public IP', 'protocol', 'Tcp', 'sourcePortRange', '*', 'destinationPortRange', '443', 'sourceAddressPrefix', if(contains(parameters('deployerIp'), '/'), parameters('deployerIp'), format('{0}/32', parameters('deployerIp'))), 'destinationAddressPrefix', '10.0.2.0/24', 'access', 'Allow', 'priority', 120, 'direction', 'Inbound'))), createArray())]",
+            "userAllowedRule": "[if(not(empty(parameters('userAllowedIp'))), createArray(createObject('name', 'Allow-UserAllowedIp-Inbound', 'properties', createObject('description', 'Allow inbound from user allowed IP', 'protocol', 'Tcp', 'sourcePortRange', '*', 'destinationPortRange', '443', 'sourceAddressPrefix', if(contains(parameters('userAllowedIp'), '/'), parameters('userAllowedIp'), format('{0}/32', parameters('userAllowedIp'))), 'destinationAddressPrefix', '10.0.2.0/24', 'access', 'Allow', 'priority', 130, 'direction', 'Inbound'))), createArray())]",
             "denyAllWebRule": [
               {
                 "name": "Deny-AllOther-Inbound",
@@ -386,9 +410,9 @@
                     "name": "Allow-WebSubnet-Inbound",
                     "properties": {
                       "description": "Allow inbound from web subnet",
-                      "protocol": "*",
+                      "protocol": "Tcp",
                       "sourcePortRange": "*",
-                      "destinationPortRange": "*",
+                      "destinationPortRange": "443",
                       "sourceAddressPrefix": "10.0.2.0/24",
                       "destinationAddressPrefix": "10.0.3.0/24",
                       "access": "Allow",
@@ -400,9 +424,9 @@
                     "name": "Allow-AcaEnvSubnet-Inbound",
                     "properties": {
                       "description": "Allow inbound from Container App Environment subnet (required for backend to access Storage)",
-                      "protocol": "*",
+                      "protocol": "Tcp",
                       "sourcePortRange": "*",
-                      "destinationPortRange": "*",
+                      "destinationPortRange": "443",
                       "sourceAddressPrefix": "10.0.0.0/24",
                       "destinationAddressPrefix": "10.0.3.0/24",
                       "access": "Allow",
@@ -426,6 +450,75 @@
                   }
                 ]
               }
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-app-nsg', parameters('vnetName')))]",
+              "name": "[format('{0}-diagnostics', format('{0}-app-nsg', parameters('vnetName')))]",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "logs": [
+                  {
+                    "category": "NetworkSecurityGroupEvent",
+                    "enabled": true
+                  },
+                  {
+                    "category": "NetworkSecurityGroupRuleCounter",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-app-nsg', parameters('vnetName')))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-web-nsg', parameters('vnetName')))]",
+              "name": "[format('{0}-diagnostics', format('{0}-web-nsg', parameters('vnetName')))]",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "logs": [
+                  {
+                    "category": "NetworkSecurityGroupEvent",
+                    "enabled": true
+                  },
+                  {
+                    "category": "NetworkSecurityGroupRuleCounter",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-web-nsg', parameters('vnetName')))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-db-nsg', parameters('vnetName')))]",
+              "name": "[format('{0}-diagnostics', format('{0}-db-nsg', parameters('vnetName')))]",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "logs": [
+                  {
+                    "category": "NetworkSecurityGroupEvent",
+                    "enabled": true
+                  },
+                  {
+                    "category": "NetworkSecurityGroupRuleCounter",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-db-nsg', parameters('vnetName')))]"
+              ]
             },
             {
               "type": "Microsoft.Network/virtualNetworks",
@@ -537,6 +630,12 @@
               "location": "global"
             },
             {
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "privatelink.vaultcore.azure.net",
+              "location": "global"
+            },
+            {
               "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
               "apiVersion": "2020-06-01",
               "name": "[format('{0}/{1}', 'privatelink.azurewebsites.net', format('{0}-link-app', parameters('vnetName')))]",
@@ -599,6 +698,22 @@
                 "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.cognitiveservices.azure.com')]",
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
               ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', 'privatelink.vaultcore.azure.net', format('{0}-link-keyvault', parameters('vnetName')))]",
+              "location": "global",
+              "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.vaultcore.azure.net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+              ]
             }
           ],
           "outputs": {
@@ -641,11 +756,16 @@
             "dnsZoneIdCognitive": {
               "type": "string",
               "value": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.cognitiveservices.azure.com')]"
+            },
+            "dnsZoneIdKeyVault": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.vaultcore.azure.net')]"
             }
           }
         }
       },
       "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
       ]
     },
@@ -760,7 +880,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "10802085335122617548"
+              "templateHash": "17759512660077797762"
             }
           },
           "parameters": {
@@ -997,7 +1117,7 @@
               "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]",
               "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName')), parameters('principalId'), 'Cognitive Services OpenAI User')]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4fbc-af51-cd5413fcf214')]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
                 "principalId": "[parameters('principalId')]",
                 "principalType": "ServicePrincipal"
               },
@@ -1035,10 +1155,6 @@
             "openai_endpoint": {
               "type": "string",
               "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName')), '2023-05-01').endpoint]"
-            },
-            "openai_api_key": {
-              "type": "string",
-              "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName')), '2023-05-01').key1]"
             },
             "openai_api_version": {
               "type": "string",
@@ -1094,7 +1210,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "984203449242538660"
+              "templateHash": "9539130134903608839"
             }
           },
           "parameters": {
@@ -1181,7 +1297,7 @@
               "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName'))]",
               "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName')), parameters('principalId'), 'Cognitive Services User')]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b40fb-5815-43a2-ac46-92c12159d690')]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')]",
                 "principalId": "[parameters('principalId')]",
                 "principalType": "ServicePrincipal"
               },
@@ -1265,10 +1381,6 @@
               "type": "string",
               "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName')), '2023-05-01').endpoint]"
             },
-            "formrecognizer_api_key": {
-              "type": "string",
-              "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName')), '2023-05-01').key1]"
-            },
             "formrecognizer_api_version": {
               "type": "string",
               "value": "[parameters('docintel_api_version')]"
@@ -1311,6 +1423,9 @@
           },
           "createRoleAssignments": {
             "value": "[parameters('createRoleAssignments')]"
+          },
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.lawId.value]"
           }
         },
         "template": {
@@ -1320,7 +1435,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "11877283750269097800"
+              "templateHash": "4615697609608688065"
             }
           },
           "parameters": {
@@ -1375,6 +1490,13 @@
               "defaultValue": false,
               "metadata": {
                 "description": "Optional: Set to true to create role assignments for Managed Identity."
+              }
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Log Analytics Workspace ID for diagnostic settings."
               }
             }
           },
@@ -1469,12 +1591,58 @@
               "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
               "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('principalId'), 'Storage Blob Data Contributor')]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92e5b2-2d11-453d-a403-e96b0029c9fe')]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
                 "principalId": "[parameters('principalId')]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+              "name": "[format('{0}-diagnostics', parameters('storageAccountName'))]",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "metrics": [
+                  {
+                    "category": "Transaction",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]",
+              "name": "[format('{0}-blob-diagnostics', parameters('storageAccountName'))]",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "logs": [
+                  {
+                    "category": "StorageRead",
+                    "enabled": true
+                  },
+                  {
+                    "category": "StorageWrite",
+                    "enabled": true
+                  },
+                  {
+                    "category": "StorageDelete",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
               ]
             }
           ],
@@ -1482,20 +1650,262 @@
             "storage_account_name": {
               "type": "string",
               "value": "[parameters('storageAccountName')]"
-            },
-            "storage_primary_access_key": {
-              "type": "string",
-              "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').keys[0].value]"
-            },
-            "storage_connection_string": {
-              "type": "string",
-              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', parameters('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').keys[0].value, environment().suffixes.storage)]"
             }
           }
         }
       },
       "dependsOn": [
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "keyvault",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vaultName": {
+            "value": "[parameters('keyVaultName')]"
+          },
+          "location": {
+            "value": "[reference(subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName')), '2022-09-01', 'full').location]"
+          },
+          "principalId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.principalId.value]"
+          },
+          "currentUserId": {
+            "value": "[parameters('currentUserId')]"
+          },
+          "currentUserPrincipalType": {
+            "value": "[parameters('currentUserPrincipalType')]"
+          },
+          "subnetId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.dbSubnetId.value]"
+          },
+          "dnsZoneId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.dnsZoneIdKeyVault.value]"
+          },
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.lawId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.43.8.12551",
+              "templateHash": "16736112921735214552"
+            }
+          },
+          "parameters": {
+            "vaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Key Vault."
+              }
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "The Azure location for the resources."
+              }
+            },
+            "principalId": {
+              "type": "string",
+              "metadata": {
+                "description": "The principal ID of the Managed Identity to grant Secrets User access."
+              }
+            },
+            "currentUserId": {
+              "type": "string",
+              "metadata": {
+                "description": "The Object ID of the deployer to grant Secrets Officer access."
+              }
+            },
+            "currentUserPrincipalType": {
+              "type": "string",
+              "defaultValue": "ServicePrincipal",
+              "metadata": {
+                "description": "The principal type of the deployer."
+              }
+            },
+            "subnetId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Subnet ID for the Private Endpoint."
+              }
+            },
+            "dnsZoneId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Private DNS Zone ID for Key Vault."
+              }
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Log Analytics Workspace ID for diagnostic settings."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2023-07-01",
+              "name": "[parameters('vaultName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "tenantId": "[subscription().tenantId]",
+                "enableRbacAuthorization": true,
+                "enabledForDeployment": true,
+                "enabledForTemplateDeployment": true,
+                "enabledForDiskEncryption": false,
+                "publicNetworkAccess": "Disabled",
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 7
+              }
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('vaultName'), 'entra-client-secret')]",
+              "properties": {
+                "value": "placeholder-secret"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('subnetId')))]",
+              "type": "Microsoft.Network/privateEndpoints",
+              "apiVersion": "2023-04-01",
+              "name": "[format('{0}-private-endpoint', parameters('vaultName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "subnet": {
+                  "id": "[parameters('subnetId')]"
+                },
+                "privateLinkServiceConnections": [
+                  {
+                    "name": "[format('{0}-link-connection', parameters('vaultName'))]",
+                    "properties": {
+                      "privateLinkServiceId": "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]",
+                      "groupIds": [
+                        "vault"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]"
+              ]
+            },
+            {
+              "condition": "[and(not(empty(parameters('subnetId'))), not(empty(parameters('dnsZoneId'))))]",
+              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+              "apiVersion": "2023-04-01",
+              "name": "[format('{0}/{1}', format('{0}-private-endpoint', parameters('vaultName')), 'default')]",
+              "properties": {
+                "privateDnsZoneConfigs": [
+                  {
+                    "name": "keyvault-dns-config",
+                    "properties": {
+                      "privateDnsZoneId": "[parameters('dnsZoneId')]"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateEndpoints', format('{0}-private-endpoint', parameters('vaultName')))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('principalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]",
+              "name": "[guid(resourceId('Microsoft.KeyVault/vaults', parameters('vaultName')), parameters('principalId'), 'Key Vault Secrets User')]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('currentUserId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]",
+              "name": "[guid(resourceId('Microsoft.KeyVault/vaults', parameters('vaultName')), parameters('currentUserId'), 'Key Vault Secrets Officer')]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
+                "principalId": "[parameters('currentUserId')]",
+                "principalType": "[parameters('currentUserPrincipalType')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]",
+              "name": "[format('{0}-diagnostics', parameters('vaultName'))]",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "logs": [
+                  {
+                    "category": "AuditEvent",
+                    "enabled": true
+                  }
+                ],
+                "metrics": [
+                  {
+                    "category": "AllMetrics",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "vaultUri": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('vaultName')), '2023-07-01').vaultUri]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring')]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
       ]
@@ -1529,23 +1939,11 @@
           "openai_endpoint": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'openai'), '2025-04-01').outputs.openai_endpoint.value]"
           },
-          "openai_api_key": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'openai'), '2025-04-01').outputs.openai_api_key.value]"
-          },
           "docintel_endpoint": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'docintel'), '2025-04-01').outputs.formrecognizer_endpoint.value]"
           },
-          "docintel_api_key": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'docintel'), '2025-04-01').outputs.formrecognizer_api_key.value]"
-          },
           "storage_account_name": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'storage'), '2025-04-01').outputs.storage_account_name.value]"
-          },
-          "storage_access_key": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'storage'), '2025-04-01').outputs.storage_primary_access_key.value]"
-          },
-          "storage_connection_string": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'storage'), '2025-04-01').outputs.storage_connection_string.value]"
           },
           "acrName": {
             "value": "[parameters('acrName')]"
@@ -1573,6 +1971,9 @@
           },
           "identityClientId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.clientId.value]"
+          },
+          "keyVaultName": {
+            "value": "[parameters('keyVaultName')]"
           }
         },
         "template": {
@@ -1582,7 +1983,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "3604819934021612867"
+              "templateHash": "12371782794876803373"
             }
           },
           "parameters": {
@@ -1687,20 +2088,8 @@
             "docintel_endpoint": {
               "type": "string"
             },
-            "openai_api_key": {
-              "type": "securestring"
-            },
-            "docintel_api_key": {
-              "type": "securestring"
-            },
             "storage_account_name": {
               "type": "string"
-            },
-            "storage_access_key": {
-              "type": "securestring"
-            },
-            "storage_connection_string": {
-              "type": "securestring"
             },
             "azure_client_id": {
               "type": "string",
@@ -1710,10 +2099,6 @@
               "type": "string",
               "defaultValue": ""
             },
-            "azure_client_secret": {
-              "type": "securestring",
-              "defaultValue": ""
-            },
             "identityId": {
               "type": "string",
               "defaultValue": ""
@@ -1721,6 +2106,9 @@
             "identityClientId": {
               "type": "string",
               "defaultValue": ""
+            },
+            "keyVaultName": {
+              "type": "string"
             }
           },
           "resources": [
@@ -1768,24 +2156,9 @@
                       "value": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').passwords[0].value]"
                     },
                     {
-                      "name": "openai-api-key",
-                      "value": "[parameters('openai_api_key')]"
-                    },
-                    {
-                      "name": "docintel-api-key",
-                      "value": "[parameters('docintel_api_key')]"
-                    },
-                    {
-                      "name": "storage-access-key",
-                      "value": "[parameters('storage_access_key')]"
-                    },
-                    {
-                      "name": "storage-connection-string",
-                      "value": "[parameters('storage_connection_string')]"
-                    },
-                    {
                       "name": "azure-client-secret",
-                      "value": "[if(empty(parameters('azure_client_secret')), 'placeholder', parameters('azure_client_secret'))]"
+                      "keyVaultUrl": "[format('https://{0}.{1}/secrets/entra-client-secret', parameters('keyVaultName'), environment().suffixes.keyvaultDns)]",
+                      "identity": "[parameters('identityId')]"
                     }
                   ],
                   "registries": [
@@ -1836,10 +2209,6 @@
                           "value": "[parameters('openai_endpoint')]"
                         },
                         {
-                          "name": "OPENAI_API_KEY",
-                          "secretRef": "openai-api-key"
-                        },
-                        {
                           "name": "OPENAI_API_VERSION",
                           "value": "2024-02-15-preview"
                         },
@@ -1848,24 +2217,12 @@
                           "value": "[parameters('docintel_endpoint')]"
                         },
                         {
-                          "name": "DOCINTEL_API_KEY",
-                          "secretRef": "docintel-api-key"
-                        },
-                        {
                           "name": "DOCINTEL_API_VERSION",
                           "value": "2023-10-01"
                         },
                         {
                           "name": "STORAGE_ACCOUNT_NAME",
                           "value": "[parameters('storage_account_name')]"
-                        },
-                        {
-                          "name": "STORAGE_ACCOUNT_KEY",
-                          "secretRef": "storage-access-key"
-                        },
-                        {
-                          "name": "STORAGE_CONNECTION_STRING",
-                          "secretRef": "storage-connection-string"
                         },
                         {
                           "name": "ENTRA_CLIENT_ID",
@@ -1882,6 +2239,10 @@
                         {
                           "name": "AZURE_CLIENT_ID",
                           "value": "[parameters('identityClientId')]"
+                        },
+                        {
+                          "name": "PYTHONUNBUFFERED",
+                          "value": "1"
                         }
                       ]
                     }
@@ -1891,6 +2252,28 @@
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]",
                 "[resourceId('Microsoft.App/managedEnvironments', parameters('envName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.App/containerApps', parameters('backendAppName'))]",
+              "name": "[format('{0}-diagnostics', parameters('backendAppName'))]",
+              "properties": {
+                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('lawName'))]",
+                "logs": [
+                  {
+                    "category": "ContainerAppConsoleLogs",
+                    "enabled": true
+                  },
+                  {
+                    "category": "ContainerAppSystemLogs",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.App/containerApps', parameters('backendAppName'))]"
               ]
             },
             {
@@ -1988,12 +2371,6 @@
                     "categoryGroup": "allLogs",
                     "enabled": true
                   }
-                ],
-                "metrics": [
-                  {
-                    "category": "AllMetrics",
-                    "enabled": true
-                  }
                 ]
               },
               "dependsOn": [
@@ -2005,10 +2382,6 @@
             "backend_hostname": {
               "type": "string",
               "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('backendAppName')), '2023-05-01').configuration.ingress.fqdn]"
-            },
-            "storage_account_name": {
-              "type": "string",
-              "value": "[parameters('storage_account_name')]"
             },
             "frontend_hostname": {
               "type": "string",
@@ -2207,6 +2580,13 @@
         "description": "The hostname of the frontend App Service"
       },
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'appservice'), '2025-04-01').outputs.frontend_hostname.value]"
+    },
+    "keyvault_name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Key Vault"
+      },
+      "value": "[parameters('keyVaultName')]"
     }
   }
 }

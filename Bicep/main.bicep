@@ -66,6 +66,10 @@ param userAllowedIp string = ''
 @description('Set to true to create role assignments for Managed Identity. Set to false if you do not have User Access Administrator or Owner permissions.')
 param createRoleAssignments bool = true
 
+@description('The name of the Key Vault')
+param keyVaultName string = '${baseName}-kv'
+
+
 resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: rgName
   location: location
@@ -148,7 +152,7 @@ module keyvault './modules/keyvault/main.bicep' = {
   name: 'keyvault'
   scope: rg
   params: {
-    vaultName: '${baseName}-kv'
+    vaultName: keyVaultName
     location: rg.location
     principalId: identity.outputs.principalId
     currentUserId: currentUserId
@@ -184,7 +188,7 @@ module app_service './modules/app_service/main.bicep' = {
     deployerIp: deployerIp
     identityId: identity.outputs.id
     identityClientId: identity.outputs.clientId
-    keyVaultName: '${baseName}-kv'
+    keyVaultName: keyVaultName
   }
 }
 
@@ -208,3 +212,7 @@ output storage_account_name string = storage.outputs.storage_account_name
 
 @description('The hostname of the frontend App Service')
 output frontend_hostname string = app_service.outputs.frontend_hostname
+
+@description('The name of the Key Vault')
+output keyvault_name string = keyVaultName
+

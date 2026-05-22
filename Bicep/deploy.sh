@@ -69,6 +69,10 @@ BASE_HASH=$(echo -n "$BASE_NAME" | cksum | cut -d' ' -f1)
 STORAGE_SUFFIX=$(echo "${BASE_HASH:0:3}")
 STORAGE_ACCOUNT_NAME=$(echo "${BASE_NAME}${STORAGE_SUFFIX}sa" | tr -d '\r')
 
+# Calculate deterministic unique name for keyvault (max 24 characters)
+KV_PREFIX=$(echo "$BASE_NAME" | tr -d '-' | tr -d '_' | cut -c 1-15)
+KEYVAULT_NAME=$(echo "${KV_PREFIX}-${STORAGE_SUFFIX}-kv" | tr -d '\r')
+
 IMAGE_NAME="backend-api"
 IMAGE_TAG=$(date +%s | tr -d '\r')
 
@@ -79,6 +83,7 @@ echo "   Resource Group: $RESOURCE_GROUP"
 echo "   ACR Name:      $ACR_NAME"
 echo "   API (ACA):     $ACA_NAME"
 echo "   UI App Service: $UI_NAME"
+echo "   Key Vault Name: $KEYVAULT_NAME"
 echo "   Region/Location: $LOCATION"
 echo "================================================="
 
@@ -112,6 +117,24 @@ fi
 
 DEPLOY_NAME="clinical-trial-deployment-$(date +%s)"
 
+echo "Checking for soft-deleted Key Vaults to prevent VaultAlreadyExists errors..."
+PURGED_ANY=false
+for KV_TO_CHECK in "${BASE_NAME}-kv" "$KEYVAULT_NAME"; do
+    echo "Checking if Key Vault '$KV_TO_CHECK' is soft-deleted..."
+    DELETED_VAULT=$(az keyvault list-deleted --query "[?name=='$KV_TO_CHECK'].name" -o tsv 2>/dev/null | tr -d '\r')
+    if [ -n "$DELETED_VAULT" ]; then
+        echo "Key Vault '$KV_TO_CHECK' is in soft-deleted state. Purging to release the name..."
+        az keyvault purge --name "$KV_TO_CHECK" --no-wait 2>/dev/null || true
+        echo "Purge command triggered for '$KV_TO_CHECK'."
+        PURGED_ANY=true
+    fi
+done
+
+if [ "$PURGED_ANY" = true ]; then
+    echo "Waiting 15 seconds for Key Vault purge propagation..."
+    sleep 15
+fi
+
 # Run Deployment with dynamic parameters
 DEPLOYMENT_OUTPUT=$(az deployment sub create \
   --name "$DEPLOY_NAME" \
@@ -127,6 +150,7 @@ DEPLOYMENT_OUTPUT=$(az deployment sub create \
     backendAppName="$ACA_NAME" \
     frontendAppName="$UI_NAME" \
     storageAccountName="$STORAGE_ACCOUNT_NAME" \
+    keyVaultName="$KEYVAULT_NAME" \
     location="$LOCATION" \
     deployerIp="$DEPLOYER_IP" \
   --output json | tr -d '\r')
@@ -297,7 +321,7 @@ az containerapp update \
 echo "Injecting Entra Client Secret into Key Vault..."
 
 az keyvault secret set \
-  --vault-name "${BASE_NAME}-kv" \
+  --vault-name "$KEYVAULT_NAME" \
   --name "entra-client-secret" \
   --value "$ENTRA_CLIENT_SECRET"
 
