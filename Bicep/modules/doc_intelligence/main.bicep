@@ -13,6 +13,15 @@ param principalId string = ''
 @description('Optional: Set to true to create role assignments for Managed Identity.')
 param createRoleAssignments bool = false
 
+@description('Optional: Subnet ID for the Private Endpoint')
+param subnetId string = ''
+
+@description('Optional: Private DNS Zone ID for Cognitive Services')
+param dnsZoneId string = ''
+
+@description('Optional: Log Analytics Workspace ID for diagnostic settings.')
+param logAnalyticsWorkspaceId string = ''
+
 resource formrecognizer 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: docintelName
   location: location
@@ -25,9 +34,8 @@ resource formrecognizer 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     workload: 'sandbox'
   }
   properties: {
-    // Cognitive Services typically require the properties object, 
-    // even if empty, depending on the API version.
-    publicNetworkAccess: 'Enabled'
+    customSubDomainName: toLower(docintelName)
+    publicNetworkAccess: 'Disabled'
   }
 }
 
@@ -38,6 +46,61 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = i
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b40fb-5815-43a2-ac46-92c12159d690')
     principalId: principalId
     principalType: 'ServicePrincipal'
+  }
+}
+resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-04-01' = if (!empty(subnetId)) {
+  name: 'docintel-private-endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: subnetId
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'docintel-link-connection'
+        properties: {
+          privateLinkServiceId: formrecognizer.id
+          groupIds: [
+            'account'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-04-01' = if (!empty(subnetId) && !empty(dnsZoneId)) {
+  parent: privateEndpoint
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'docintel-dns-config'
+        properties: {
+          privateDnsZoneId: dnsZoneId
+        }
+      }
+    ]
+  }
+}
+
+resource docintelDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(logAnalyticsWorkspaceId)) {
+  name: '${docintelName}-diagnostics'
+  scope: formrecognizer
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
   }
 }
 

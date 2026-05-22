@@ -23,6 +23,9 @@ param principalId string = ''
 @description('Optional: Set to true to create role assignments for Managed Identity.')
 param createRoleAssignments bool = false
 
+@description('Optional: Log Analytics Workspace ID for diagnostic settings.')
+param logAnalyticsWorkspaceId string = ''
+
 /*
 ========================================
 Azure OpenAI Account
@@ -218,6 +221,25 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = i
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4fbc-af51-cd5413fcf214')
     principalId: principalId
     principalType: 'ServicePrincipal'
+  }
+}
+resource openaiDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(logAnalyticsWorkspaceId)) {
+  name: '${openaiName}-diagnostics'
+  scope: openai
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
   }
 }
 

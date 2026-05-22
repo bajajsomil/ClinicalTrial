@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "8761458678042599804"
+      "templateHash": "16989318894710188256"
     }
   },
   "parameters": {
@@ -119,6 +119,13 @@
         "description": "Optional: The IP address of the deployer to allow for deployment and access"
       }
     },
+    "userAllowedIp": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Optional: Additional user allowed IP address or CIDR to whitelist"
+      }
+    },
     "createRoleAssignments": {
       "type": "bool",
       "defaultValue": false,
@@ -137,6 +144,78 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
+      "name": "monitoring",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[reference(subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName')), '2022-09-01', 'full').location]"
+          },
+          "lawName": {
+            "value": "[parameters('lawName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.43.8.12551",
+              "templateHash": "1525914687515261457"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "lawName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Log Analytics Workspace"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2022-10-01",
+              "name": "[parameters('lawName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "sku": {
+                  "name": "PerGB2018"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "lawId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('lawName'))]"
+            },
+            "lawName": {
+              "type": "string",
+              "value": "[parameters('lawName')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
       "name": "network",
       "resourceGroup": "[parameters('rgName')]",
       "properties": {
@@ -150,6 +229,12 @@
           },
           "vnetName": {
             "value": "[parameters('vnetName')]"
+          },
+          "deployerIp": {
+            "value": "[parameters('deployerIp')]"
+          },
+          "userAllowedIp": {
+            "value": "[parameters('userAllowedIp')]"
           }
         },
         "template": {
@@ -159,7 +244,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "13115513712131149133"
+              "templateHash": "12463844634264366637"
             }
           },
           "parameters": {
@@ -176,9 +261,172 @@
               "metadata": {
                 "description": "Name of the Virtual Network"
               }
+            },
+            "deployerIp": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: The IP address of the deployer to allow for deployment and access"
+              }
+            },
+            "userAllowedIp": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Additional user allowed IP address or CIDR to whitelist"
+              }
             }
           },
+          "variables": {
+            "defaultWebRules": [
+              {
+                "name": "Allow-AppSubnet-Inbound",
+                "properties": {
+                  "description": "Allow inbound from application subnet",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "10.0.1.0/24",
+                  "destinationAddressPrefix": "10.0.2.0/24",
+                  "access": "Allow",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "Allow-DbSubnet-Inbound",
+                "properties": {
+                  "description": "Allow inbound from db subnet",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "10.0.3.0/24",
+                  "destinationAddressPrefix": "10.0.2.0/24",
+                  "access": "Allow",
+                  "priority": 110,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "Allow-AcaEnvSubnet-Inbound",
+                "properties": {
+                  "description": "Allow inbound from Container App Environment subnet (required for backend to access OpenAI)",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "10.0.0.0/24",
+                  "destinationAddressPrefix": "10.0.2.0/24",
+                  "access": "Allow",
+                  "priority": 115,
+                  "direction": "Inbound"
+                }
+              }
+            ],
+            "deployerRule": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('name', 'Allow-DeployerIp-Inbound', 'properties', createObject('description', 'Allow inbound from deployer public IP', 'protocol', '*', 'sourcePortRange', '*', 'destinationPortRange', '*', 'sourceAddressPrefix', if(contains(parameters('deployerIp'), '/'), parameters('deployerIp'), format('{0}/32', parameters('deployerIp'))), 'destinationAddressPrefix', '10.0.2.0/24', 'access', 'Allow', 'priority', 120, 'direction', 'Inbound'))), createArray())]",
+            "userAllowedRule": "[if(not(empty(parameters('userAllowedIp'))), createArray(createObject('name', 'Allow-UserAllowedIp-Inbound', 'properties', createObject('description', 'Allow inbound from user allowed IP', 'protocol', '*', 'sourcePortRange', '*', 'destinationPortRange', '*', 'sourceAddressPrefix', if(contains(parameters('userAllowedIp'), '/'), parameters('userAllowedIp'), format('{0}/32', parameters('userAllowedIp'))), 'destinationAddressPrefix', '10.0.2.0/24', 'access', 'Allow', 'priority', 130, 'direction', 'Inbound'))), createArray())]",
+            "denyAllWebRule": [
+              {
+                "name": "Deny-AllOther-Inbound",
+                "properties": {
+                  "description": "Deny all other inbound traffic to web subnet",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "10.0.2.0/24",
+                  "access": "Deny",
+                  "priority": 200,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          },
           "resources": [
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2023-04-01",
+              "name": "[format('{0}-app-nsg', parameters('vnetName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "Allow-HTTPS-Inbound",
+                    "properties": {
+                      "description": "Allow all incoming HTTPS traffic on port 443",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "443",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2023-04-01",
+              "name": "[format('{0}-web-nsg', parameters('vnetName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": "[concat(variables('defaultWebRules'), variables('deployerRule'), variables('userAllowedRule'), variables('denyAllWebRule'))]"
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2023-04-01",
+              "name": "[format('{0}-db-nsg', parameters('vnetName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "Allow-WebSubnet-Inbound",
+                    "properties": {
+                      "description": "Allow inbound from web subnet",
+                      "protocol": "*",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "*",
+                      "sourceAddressPrefix": "10.0.2.0/24",
+                      "destinationAddressPrefix": "10.0.3.0/24",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "Allow-AcaEnvSubnet-Inbound",
+                    "properties": {
+                      "description": "Allow inbound from Container App Environment subnet (required for backend to access Storage)",
+                      "protocol": "*",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "*",
+                      "sourceAddressPrefix": "10.0.0.0/24",
+                      "destinationAddressPrefix": "10.0.3.0/24",
+                      "access": "Allow",
+                      "priority": 110,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "Deny-AllOther-Inbound",
+                    "properties": {
+                      "description": "Deny all other inbound traffic to db subnet",
+                      "protocol": "*",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "*",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "10.0.3.0/24",
+                      "access": "Deny",
+                      "priority": 200,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
             {
               "type": "Microsoft.Network/virtualNetworks",
               "apiVersion": "2023-04-01",
@@ -212,7 +460,10 @@
                     "properties": {
                       "addressPrefix": "10.0.1.0/24",
                       "privateEndpointNetworkPolicies": "Disabled",
-                      "privateLinkServiceNetworkPolicies": "Enabled"
+                      "privateLinkServiceNetworkPolicies": "Enabled",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-app-nsg', parameters('vnetName')))]"
+                      }
                     }
                   },
                   {
@@ -220,7 +471,10 @@
                     "properties": {
                       "addressPrefix": "10.0.2.0/24",
                       "privateEndpointNetworkPolicies": "Disabled",
-                      "privateLinkServiceNetworkPolicies": "Enabled"
+                      "privateLinkServiceNetworkPolicies": "Enabled",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-web-nsg', parameters('vnetName')))]"
+                      }
                     }
                   },
                   {
@@ -228,7 +482,10 @@
                     "properties": {
                       "addressPrefix": "10.0.3.0/24",
                       "privateEndpointNetworkPolicies": "Disabled",
-                      "privateLinkServiceNetworkPolicies": "Enabled"
+                      "privateLinkServiceNetworkPolicies": "Enabled",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-db-nsg', parameters('vnetName')))]"
+                      }
                     }
                   },
                   {
@@ -248,7 +505,12 @@
                     }
                   }
                 ]
-              }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-app-nsg', parameters('vnetName')))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-db-nsg', parameters('vnetName')))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-web-nsg', parameters('vnetName')))]"
+              ]
             },
             {
               "type": "Microsoft.Network/privateDnsZones",
@@ -266,6 +528,12 @@
               "type": "Microsoft.Network/privateDnsZones",
               "apiVersion": "2020-06-01",
               "name": "[format('privatelink.blob.{0}', environment().suffixes.storage)]",
+              "location": "global"
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "privatelink.cognitiveservices.azure.com",
               "location": "global"
             },
             {
@@ -315,6 +583,22 @@
                 "[resourceId('Microsoft.Network/privateDnsZones', format('privatelink.blob.{0}', environment().suffixes.storage))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
               ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', 'privatelink.cognitiveservices.azure.com', format('{0}-link-cognitive', parameters('vnetName')))]",
+              "location": "global",
+              "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.cognitiveservices.azure.com')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+              ]
             }
           ],
           "outputs": {
@@ -353,6 +637,10 @@
             "dnsZoneIdBlob": {
               "type": "string",
               "value": "[resourceId('Microsoft.Network/privateDnsZones', format('privatelink.blob.{0}', environment().suffixes.storage))]"
+            },
+            "dnsZoneIdCognitive": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.cognitiveservices.azure.com')]"
             }
           }
         }
@@ -460,6 +748,9 @@
           },
           "createRoleAssignments": {
             "value": "[parameters('createRoleAssignments')]"
+          },
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.lawId.value]"
           }
         },
         "template": {
@@ -469,7 +760,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "17306526377487282440"
+              "templateHash": "10802085335122617548"
             }
           },
           "parameters": {
@@ -525,6 +816,13 @@
               "metadata": {
                 "description": "Optional: Set to true to create role assignments for Managed Identity."
               }
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Log Analytics Workspace ID for diagnostic settings."
+              }
             }
           },
           "resources": [
@@ -576,7 +874,8 @@
                   "format": "OpenAI",
                   "name": "gpt-4.1",
                   "version": "2025-04-14"
-                }
+                },
+                "raiPolicyName": "Microsoft.Default"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Resources/deploymentScripts', 'openai-deployment-delay')]",
@@ -596,7 +895,8 @@
                   "format": "OpenAI",
                   "name": "gpt-4.1-mini",
                   "version": "2025-04-14"
-                }
+                },
+                "raiPolicyName": "Microsoft.Default"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt41')]",
@@ -616,7 +916,8 @@
                   "format": "OpenAI",
                   "name": "gpt-4o",
                   "version": "2024-11-20"
-                }
+                },
+                "raiPolicyName": "Microsoft.Default"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt41_mini')]",
@@ -636,7 +937,8 @@
                   "format": "OpenAI",
                   "name": "gpt-4o-mini",
                   "version": "2024-07-18"
-                }
+                },
+                "raiPolicyName": "Microsoft.Default"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt4o')]",
@@ -702,6 +1004,31 @@
               "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
               ]
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]",
+              "name": "[format('{0}-diagnostics', parameters('openaiName'))]",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "logs": [
+                  {
+                    "categoryGroup": "allLogs",
+                    "enabled": true
+                  }
+                ],
+                "metrics": [
+                  {
+                    "category": "AllMetrics",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+              ]
             }
           ],
           "outputs": {
@@ -722,6 +1049,7 @@
       },
       "dependsOn": [
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring')]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
       ]
@@ -748,6 +1076,15 @@
           },
           "createRoleAssignments": {
             "value": "[parameters('createRoleAssignments')]"
+          },
+          "subnetId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.webSubnetId.value]"
+          },
+          "dnsZoneId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.dnsZoneIdCognitive.value]"
+          },
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.lawId.value]"
           }
         },
         "template": {
@@ -757,7 +1094,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "5679344381155260517"
+              "templateHash": "984203449242538660"
             }
           },
           "parameters": {
@@ -795,6 +1132,27 @@
               "metadata": {
                 "description": "Optional: Set to true to create role assignments for Managed Identity."
               }
+            },
+            "subnetId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Subnet ID for the Private Endpoint"
+              }
+            },
+            "dnsZoneId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Private DNS Zone ID for Cognitive Services"
+              }
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Log Analytics Workspace ID for diagnostic settings."
+              }
             }
           },
           "resources": [
@@ -812,7 +1170,8 @@
                 "workload": "sandbox"
               },
               "properties": {
-                "publicNetworkAccess": "Enabled"
+                "customSubDomainName": "[toLower(parameters('docintelName'))]",
+                "publicNetworkAccess": "Disabled"
               }
             },
             {
@@ -825,6 +1184,76 @@
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b40fb-5815-43a2-ac46-92c12159d690')]",
                 "principalId": "[parameters('principalId')]",
                 "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('subnetId')))]",
+              "type": "Microsoft.Network/privateEndpoints",
+              "apiVersion": "2023-04-01",
+              "name": "docintel-private-endpoint",
+              "location": "[parameters('location')]",
+              "properties": {
+                "subnet": {
+                  "id": "[parameters('subnetId')]"
+                },
+                "privateLinkServiceConnections": [
+                  {
+                    "name": "docintel-link-connection",
+                    "properties": {
+                      "privateLinkServiceId": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName'))]",
+                      "groupIds": [
+                        "account"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName'))]"
+              ]
+            },
+            {
+              "condition": "[and(not(empty(parameters('subnetId'))), not(empty(parameters('dnsZoneId'))))]",
+              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+              "apiVersion": "2023-04-01",
+              "name": "[format('{0}/{1}', 'docintel-private-endpoint', 'default')]",
+              "properties": {
+                "privateDnsZoneConfigs": [
+                  {
+                    "name": "docintel-dns-config",
+                    "properties": {
+                      "privateDnsZoneId": "[parameters('dnsZoneId')]"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateEndpoints', 'docintel-private-endpoint')]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName'))]",
+              "name": "[format('{0}-diagnostics', parameters('docintelName'))]",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "logs": [
+                  {
+                    "categoryGroup": "allLogs",
+                    "enabled": true
+                  }
+                ],
+                "metrics": [
+                  {
+                    "category": "AllMetrics",
+                    "enabled": true
+                  }
+                ]
               },
               "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', parameters('docintelName'))]"
@@ -849,6 +1278,8 @@
       },
       "dependsOn": [
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'monitoring')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
       ]
     },
@@ -1151,7 +1582,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "3192312531163249961"
+              "templateHash": "3604819934021612867"
             }
           },
           "parameters": {
@@ -1306,17 +1737,6 @@
               }
             },
             {
-              "type": "Microsoft.OperationalInsights/workspaces",
-              "apiVersion": "2022-10-01",
-              "name": "[parameters('lawName')]",
-              "location": "[parameters('location')]",
-              "properties": {
-                "sku": {
-                  "name": "PerGB2018"
-                }
-              }
-            },
-            {
               "type": "Microsoft.App/managedEnvironments",
               "apiVersion": "2023-05-01",
               "name": "[parameters('envName')]",
@@ -1330,10 +1750,7 @@
                   }
                 },
                 "vnetConfiguration": "[if(not(empty(parameters('acaEnvSubnetId'))), createObject('infrastructureSubnetId', parameters('acaEnvSubnetId'), 'internal', false()), null())]"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('lawName'))]"
-              ]
+              }
             },
             {
               "type": "Microsoft.App/containerApps",
@@ -1499,6 +1916,7 @@
                 "virtualNetworkSubnetId": "[if(not(empty(parameters('integrationSubnetId'))), parameters('integrationSubnetId'), null())]",
                 "publicNetworkAccess": "[if(not(empty(parameters('deployerIp'))), 'Enabled', parameters('publicNetworkAccess'))]",
                 "scmPublicNetworkAccess": "Enabled",
+                "httpsOnly": true,
                 "siteConfig": {
                   "vnetRouteAllEnabled": true,
                   "alwaysOn": true,
@@ -1556,6 +1974,30 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/privateEndpoints', 'frontend-private-endpoint')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[resourceId('Microsoft.Web/sites', parameters('frontendAppName'))]",
+              "name": "[format('{0}-diagnostics', parameters('frontendAppName'))]",
+              "properties": {
+                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('lawName'))]",
+                "logs": [
+                  {
+                    "categoryGroup": "allLogs",
+                    "enabled": true
+                  }
+                ],
+                "metrics": [
+                  {
+                    "category": "AllMetrics",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('frontendAppName'))]"
               ]
             }
           ],
