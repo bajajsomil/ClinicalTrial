@@ -243,6 +243,10 @@ resource backend 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'AZURE_CLIENT_ID'
               value: identityClientId
             }
+            {
+              name: 'PYTHONUNBUFFERED'
+              value: '1'
+            }
           ]
         }
       ]

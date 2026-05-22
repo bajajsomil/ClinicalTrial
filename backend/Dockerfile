@@ -1,8 +1,8 @@
-
-
-
 # 1. Use an official, lightweight Python image
 FROM python:3.11-slim
+
+# Force stdin, stdout and stderr to be totally unbuffered.
+ENV PYTHONUNBUFFERED=1
 
 # 2. Set the working directory inside the container
 WORKDIR /app
