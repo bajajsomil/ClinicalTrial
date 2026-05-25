@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "16989318894710188256"
+      "templateHash": "5940430821040792033"
     }
   },
   "parameters": {
@@ -1297,12 +1297,6 @@
           "location": {
             "value": "[reference(subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName')), '2022-09-01', 'full').location]"
           },
-          "subnetId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.dbSubnetId.value]"
-          },
-          "dnsZoneId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.dnsZoneIdBlob.value]"
-          },
           "storageAccountName": {
             "value": "[parameters('storageAccountName')]"
           },
@@ -1320,7 +1314,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "11877283750269097800"
+              "templateHash": "15713171426136550846"
             }
           },
           "parameters": {
@@ -1331,23 +1325,9 @@
                 "description": "Location for the storage account."
               }
             },
-            "subnetId": {
-              "type": "string",
-              "defaultValue": "",
-              "metadata": {
-                "description": "Optional: Subnet ID for the Private Endpoint"
-              }
-            },
-            "dnsZoneId": {
-              "type": "string",
-              "defaultValue": "",
-              "metadata": {
-                "description": "Optional: Private DNS Zone ID for Blob Storage"
-              }
-            },
             "publicNetworkAccess": {
               "type": "string",
-              "defaultValue": "Disabled",
+              "defaultValue": "Enabled",
               "allowedValues": [
                 "Enabled",
                 "Disabled"
@@ -1389,7 +1369,7 @@
               },
               "kind": "StorageV2",
               "properties": {
-                "allowBlobPublicAccess": false,
+                "allowBlobPublicAccess": true,
                 "minimumTlsVersion": "TLS1_2",
                 "supportsHttpsTrafficOnly": true,
                 "publicNetworkAccess": "[parameters('publicNetworkAccess')]"
@@ -1411,55 +1391,10 @@
               "apiVersion": "2023-01-01",
               "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', 'pharma')]",
               "properties": {
-                "publicAccess": "None"
+                "publicAccess": "Blob"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
-              ]
-            },
-            {
-              "condition": "[not(empty(parameters('subnetId')))]",
-              "type": "Microsoft.Network/privateEndpoints",
-              "apiVersion": "2023-04-01",
-              "name": "storage-private-endpoint",
-              "location": "[parameters('location')]",
-              "properties": {
-                "subnet": {
-                  "id": "[parameters('subnetId')]"
-                },
-                "privateLinkServiceConnections": [
-                  {
-                    "name": "storage-link-connection",
-                    "properties": {
-                      "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-                      "groupIds": [
-                        "blob"
-                      ]
-                    }
-                  }
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-              ]
-            },
-            {
-              "condition": "[and(not(empty(parameters('subnetId'))), not(empty(parameters('dnsZoneId'))))]",
-              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
-              "apiVersion": "2023-04-01",
-              "name": "[format('{0}/{1}', 'storage-private-endpoint', 'default')]",
-              "properties": {
-                "privateDnsZoneConfigs": [
-                  {
-                    "name": "storage-dns-config",
-                    "properties": {
-                      "privateDnsZoneId": "[parameters('dnsZoneId')]"
-                    }
-                  }
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Network/privateEndpoints', 'storage-private-endpoint')]"
               ]
             },
             {
@@ -1496,7 +1431,6 @@
       },
       "dependsOn": [
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'network')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
       ]
     },
@@ -1582,7 +1516,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "3604819934021612867"
+              "templateHash": "13893882143742048187"
             }
           },
           "parameters": {
@@ -1882,6 +1816,10 @@
                         {
                           "name": "AZURE_CLIENT_ID",
                           "value": "[parameters('identityClientId')]"
+                        },
+                        {
+                          "name": "PYTHONUNBUFFERED",
+                          "value": "1"
                         }
                       ]
                     }

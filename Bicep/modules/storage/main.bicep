@@ -1,18 +1,13 @@
 @description('Location for the storage account.')
 param location string = resourceGroup().location
 
-@description('Optional: Subnet ID for the Private Endpoint')
-param subnetId string = ''
-
-@description('Optional: Private DNS Zone ID for Blob Storage')
-param dnsZoneId string = ''
 
 @description('Public network access status for the Storage Account')
 @allowed([
   'Enabled'
   'Disabled'
 ])
-param publicNetworkAccess string = 'Disabled'
+param publicNetworkAccess string = 'Enabled'
 
 @description('The name of the storage account.')
 param storageAccountName string = 'clinicaltrialstore909'
@@ -32,7 +27,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
   kind: 'StorageV2'
   properties: {
-    allowBlobPublicAccess: false
+    allowBlobPublicAccess: true
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
     publicNetworkAccess: publicNetworkAccess
@@ -53,47 +48,11 @@ resource pharmaContainer 'Microsoft.Storage/storageAccounts/blobServices/contain
   parent: blobServices
   name: 'pharma'
   properties: {
-    publicAccess: 'None'
+    publicAccess: 'Blob'
   }
 }
 
-// --- Private Endpoint for Storage ---
-resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-04-01' = if (!empty(subnetId)) {
-  name: 'storage-private-endpoint'
-  location: location
-  properties: {
-    subnet: {
-      id: subnetId
-    }
-    privateLinkServiceConnections: [
-      {
-        name: 'storage-link-connection'
-        properties: {
-          privateLinkServiceId: storageAccount.id
-          groupIds: [
-            'blob'
-          ]
-        }
-      }
-    ]
-  }
-}
 
-// --- Private DNS Zone Group for Storage ---
-resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-04-01' = if (!empty(subnetId) && !empty(dnsZoneId)) {
-  parent: privateEndpoint
-  name: 'default'
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'storage-dns-config'
-        properties: {
-          privateDnsZoneId: dnsZoneId
-        }
-      }
-    ]
-  }
-}
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId) && createRoleAssignments) {
   name: guid(storageAccount.id, principalId, 'Storage Blob Data Contributor')
