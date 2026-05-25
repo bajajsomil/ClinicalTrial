@@ -1,3 +1,5 @@
+//pages/UnifiedWorkflow.tsx
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
@@ -25,7 +27,7 @@ import Navbar from "@/components/Navbar";
 import ProtocolLoader from "@/components/ProtocalAnalyzerLoader";
 import VendorIntelligenceLoader from "@/components/VendorIntelligenceLoader";
 import DocumentLoader from "@/components/DocumentComparisonLoader";
-import { API_BASE_URL, BLOB_URL } from "@/config/api";
+import { API_BASE_URL, BLOB_URL, fetchContainerSasToken } from "@/config/api";
 
 // ─── Type Definitions ──────────────────────────────────────────────────────────
 
@@ -81,6 +83,14 @@ const formatDuration = (val: any) => {
 const CitationModal = ({ isOpen, onClose, data, fileName }: {
   isOpen: boolean; onClose: () => void; data: CitationData | null; fileName: string;
 }) => {
+  const [sasToken, setSasToken] = useState<string>("");
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchContainerSasToken().then(setSasToken);
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return;
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -131,7 +141,11 @@ const CitationModal = ({ isOpen, onClose, data, fileName }: {
                       const isNum = /^\d+$/.test(s);
                       return (
                         <button key={idx}
-                          onClick={() => isNum && window.open(`${BLOB_URL}${fileName}#page=${s}`, "_blank")}
+                          onClick={() => {
+                            if (isNum) {
+                              window.open(`${BLOB_URL}${fileName}${sasToken}#page=${s}`, "_blank");
+                            }
+                          }}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${isNum ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 cursor-pointer" : "bg-gray-100 text-gray-600 border-gray-200 cursor-default"}`}
                         >
                           {isNum ? `Page ${s}` : s}

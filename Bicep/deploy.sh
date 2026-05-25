@@ -57,6 +57,28 @@ fi
 BASE_NAME=$(echo "$BASE_NAME" | tr -d '\r')
 LOCATION=$(echo "$LOCATION" | tr -d '\r')
 
+# Prompt for IP Whitelisting early for premium developer experience
+echo -e "\nAccess Security Configuration:"
+echo -n "Do you want to whitelist an IP address/CIDR range for both the Frontend App Service and the Storage Account? (y/n) [default: n] (timeout 20s): "
+whitelist_choice="n"
+if read -t 20 input_choice; then
+    whitelist_choice="$input_choice"
+fi
+
+whitelist_ip=""
+if [[ "$whitelist_choice" =~ ^[Yy]$ ]]; then
+    echo -n "Enter the IP address or CIDR range to whitelist (e.g. 192.168.1.0/24 or 203.0.113.5/32): "
+    read -r whitelist_ip
+    whitelist_ip=$(echo "$whitelist_ip" | tr -d '\r')
+    if [ ! -z "$whitelist_ip" ]; then
+        echo "Whitelisting will allow: $whitelist_ip"
+    else
+        echo "Warning: No IP address provided. Skipping whitelisting."
+    fi
+else
+    echo "Skipping IP whitelisting."
+fi
+
 # Sanitize and construct dynamic names
 RESOURCE_GROUP=$(echo "${BASE_NAME}-rg" | tr -d '\r')
 # ACR name must be strictly lowercase, alphanumeric, 5-50 characters
@@ -126,6 +148,7 @@ DEPLOYMENT_OUTPUT=$(az deployment sub create \
     storageAccountName="$STORAGE_ACCOUNT_NAME" \
     location="$LOCATION" \
     deployerIp="$DEPLOYER_IP" \
+    userAllowedIp="$whitelist_ip" \
   --output json | tr -d '\r')
 
 
@@ -333,29 +356,10 @@ az webapp deploy \
   --src-path ../frontend.zip \
   --type zip
 
-# Access Security Configuration
-echo -e "\nAccess Security Configuration:"
-echo -n "Do you want to whitelist an IP address/CIDR block on the Frontend App Service? (y/n) [default: n]: "
-read -r whitelist_choice
-if [[ "$whitelist_choice" =~ ^[Yy]$ ]]; then
-    echo -n "Enter the IP address or CIDR range to whitelist (e.g. 192.168.1.0/24 or 203.0.113.5/32): "
-    read -r whitelist_ip
-    if [ ! -z "$whitelist_ip" ]; then
-        echo "Whitelisting $whitelist_ip on Frontend App Service $UI_NAME..."
-        az webapp config access-restriction add \
-          --resource-group "$RESOURCE_GROUP" \
-          --name "$UI_NAME" \
-          --rule-name "UserWhitelistedIp" \
-          --action Allow \
-          --ip-address "$whitelist_ip" \
-          --priority 200 \
-          --description "Allow access from user whitelisted IP address space"
-        echo "Whitelisted successfully!"
-    else
-        echo "Warning: No IP address provided. Skipping whitelisting."
-    fi
-else
-    echo "Skipping IP whitelisting."
+# Access Security Confirmation
+if [ ! -z "$whitelist_ip" ]; then
+    echo -e "\nAccess security configuration applied natively via Bicep templates!"
+    echo "Whitelisted IP/CIDR: $whitelist_ip (Allowed on Storage Account and Frontend App Service)"
 fi
 
 echo "================================================="

@@ -135,6 +135,9 @@ module storage './modules/storage/main.bicep' = {
     storageAccountName: storageAccountName
     principalId: identity.outputs.principalId
     createRoleAssignments: createRoleAssignments
+    deployerIp: deployerIp
+    userAllowedIp: userAllowedIp
+    publicNetworkAccess: (!empty(deployerIp) || !empty(userAllowedIp)) ? 'Enabled' : 'Disabled'
   }
 }
 
@@ -167,6 +170,7 @@ module app_service './modules/app_service/main.bicep' = {
     aspName: aspName
     frontendAppName: frontendAppName
     deployerIp: deployerIp
+    userAllowedIp: userAllowedIp
     identityId: identity.outputs.id
     identityClientId: identity.outputs.clientId
   }

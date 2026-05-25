@@ -2,22 +2,33 @@ import os
 import asyncio
 import numpy as np
 import pandas as pd
-from src.models import *
-from typing import List, Tuple
-from config.config import Config
+from typing import List, Tuple, Dict
 from openpyxl import load_workbook
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from deepeval.models import AzureOpenAIModel
+
+from src.models import *
+from config.config import Config
 from src.utils_helper import timing_decorator
 from src.adapters.azure_openai import batch_client
 from src.prompts.system import get_prompt_template
 from src.adapters.logger import log_with_span
 from src.adapters.azure_document_intelligence import document_intelligence
 
+# ============================================================
+# MANAGED IDENTITY SETUP FOR DEEPEVAL
+# ============================================================
+credential = DefaultAzureCredential()
+token_provider = get_bearer_token_provider(
+    credential, "https://cognitiveservices.azure.com/.default"
+)
+
 # Initialize the Azure OpenAI model used for text generation and JSON extraction
+# Using azure_ad_token_provider instead of azure_openai_api_key for Passwordless Auth
 model = AzureOpenAIModel(
     model_name=Config.GPT_GENERATION_4O_MODEL,
     deployment_name=Config.GPT_GENERATION_4O_MODEL,
-    azure_openai_api_key=Config.AZURE_OPENAI_KEY,
+    azure_ad_token_provider=token_provider,  # <-- Passwordless auth injected here
     openai_api_version=Config.AZURE_OPENAI_VERSION,
     azure_endpoint=Config.AZURE_OPENAI_ENDPOINT,
     temperature=0
@@ -196,8 +207,6 @@ async def get_rate_card(file_path: str) -> str:
 
     Args:
         file_path (str): Path to the Excel workbook containing rate card data.
-        finance_data (dict): Finance data for context (currently not used in processing).
-        terms (dict): Contract terms for context (currently not used in processing).
 
     Returns:
         str: A Markdown-formatted string combining all sheets from the workbook.
@@ -397,7 +406,7 @@ async def extract_and_join_pages(wp: str, pdf_path: str) -> Tuple[str, str]:
         )
 
         # Call your existing async PDF extractor
-        data, duration = await extract_pdf_pages(pdf_path)
+        data = await extract_pdf_pages(pdf_path)
 
         # Join all pages into a single string
         all_pages = "\n".join(page for page in data.pages)

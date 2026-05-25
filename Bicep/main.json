@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "16989318894710188256"
+      "templateHash": "9282678059004996318"
     }
   },
   "parameters": {
@@ -1311,7 +1311,14 @@
           },
           "createRoleAssignments": {
             "value": "[parameters('createRoleAssignments')]"
-          }
+          },
+          "deployerIp": {
+            "value": "[parameters('deployerIp')]"
+          },
+          "userAllowedIp": {
+            "value": "[parameters('userAllowedIp')]"
+          },
+          "publicNetworkAccess": "[if(or(not(empty(parameters('deployerIp'))), not(empty(parameters('userAllowedIp')))), createObject('value', 'Enabled'), createObject('value', 'Disabled'))]"
         },
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
@@ -1320,7 +1327,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "11877283750269097800"
+              "templateHash": "6133396253332632172"
             }
           },
           "parameters": {
@@ -1356,6 +1363,20 @@
                 "description": "Public network access status for the Storage Account"
               }
             },
+            "deployerIp": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: The IP address of the deployer to whitelist"
+              }
+            },
+            "userAllowedIp": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Additional user allowed IP address or CIDR to whitelist"
+              }
+            },
             "storageAccountName": {
               "type": "string",
               "defaultValue": "clinicaltrialstore909",
@@ -1378,6 +1399,11 @@
               }
             }
           },
+          "variables": {
+            "deployerIpRule": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('value', parameters('deployerIp'), 'action', 'Allow')), createArray())]",
+            "userIpRule": "[if(not(empty(parameters('userAllowedIp'))), createArray(createObject('value', parameters('userAllowedIp'), 'action', 'Allow')), createArray())]",
+            "ipRules": "[concat(variables('deployerIpRule'), variables('userIpRule'))]"
+          },
           "resources": [
             {
               "type": "Microsoft.Storage/storageAccounts",
@@ -1392,7 +1418,8 @@
                 "allowBlobPublicAccess": false,
                 "minimumTlsVersion": "TLS1_2",
                 "supportsHttpsTrafficOnly": true,
-                "publicNetworkAccess": "[parameters('publicNetworkAccess')]"
+                "publicNetworkAccess": "[parameters('publicNetworkAccess')]",
+                "networkAcls": "[if(equals(parameters('publicNetworkAccess'), 'Enabled'), createObject('bypass', 'AzureServices', 'defaultAction', 'Deny', 'ipRules', variables('ipRules')), createObject('bypass', 'AzureServices', 'defaultAction', 'Allow'))]"
               },
               "tags": {
                 "workload": "sandbox"
@@ -1568,6 +1595,9 @@
           "deployerIp": {
             "value": "[parameters('deployerIp')]"
           },
+          "userAllowedIp": {
+            "value": "[parameters('userAllowedIp')]"
+          },
           "identityId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.id.value]"
           },
@@ -1582,7 +1612,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "3604819934021612867"
+              "templateHash": "3900159938571458494"
             }
           },
           "parameters": {
@@ -1637,6 +1667,13 @@
               "defaultValue": "",
               "metadata": {
                 "description": "Optional: The IP address of the deployer to allow for deployment and access"
+              }
+            },
+            "userAllowedIp": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Additional user allowed IP address or CIDR to whitelist"
               }
             },
             "acrName": {
@@ -1882,6 +1919,10 @@
                         {
                           "name": "AZURE_CLIENT_ID",
                           "value": "[parameters('identityClientId')]"
+                        },
+                        {
+                          "name": "PYTHONUNBUFFERED",
+                          "value": "1"
                         }
                       ]
                     }
@@ -1922,8 +1963,8 @@
                   "alwaysOn": true,
                   "linuxFxVersion": "NODE|20-lts",
                   "appCommandLine": "pm2 serve /home/site/wwwroot --no-daemon --spa",
-                  "ipSecurityRestrictions": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('ipAddress', format('{0}/32', parameters('deployerIp')), 'action', 'Allow', 'priority', 100, 'name', 'AllowDeployer', 'description', 'Allow access from developer machine')), createArray())]",
-                  "scmIpSecurityRestrictions": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('ipAddress', format('{0}/32', parameters('deployerIp')), 'action', 'Allow', 'priority', 100, 'name', 'AllowDeployer', 'description', 'Allow deployment from developer machine')), createArray())]",
+                  "ipSecurityRestrictions": "[concat(if(not(empty(parameters('deployerIp'))), createArray(createObject('ipAddress', if(contains(parameters('deployerIp'), '/'), parameters('deployerIp'), format('{0}/32', parameters('deployerIp'))), 'action', 'Allow', 'priority', 100, 'name', 'AllowDeployer', 'description', 'Allow access from developer machine')), createArray()), if(not(empty(parameters('userAllowedIp'))), createArray(createObject('ipAddress', if(contains(parameters('userAllowedIp'), '/'), parameters('userAllowedIp'), format('{0}/32', parameters('userAllowedIp'))), 'action', 'Allow', 'priority', 200, 'name', 'UserWhitelistedIp', 'description', 'Allow access from user whitelisted IP address space')), createArray()))]",
+                  "scmIpSecurityRestrictions": "[if(not(empty(parameters('deployerIp'))), createArray(createObject('ipAddress', if(contains(parameters('deployerIp'), '/'), parameters('deployerIp'), format('{0}/32', parameters('deployerIp'))), 'action', 'Allow', 'priority', 100, 'name', 'AllowDeployer', 'description', 'Allow deployment from developer machine')), createArray())]",
                   "scmIpSecurityRestrictionsUseMain": false
                 }
               },

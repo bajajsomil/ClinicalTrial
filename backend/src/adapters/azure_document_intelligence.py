@@ -9,7 +9,7 @@ from ftfy import fix_text
 from typing import List, Tuple, Dict, Any, Set
 from PyPDF2 import PdfWriter, PdfReader
 from azure.core.exceptions import AzureError
-from azure.core.credentials import AzureKeyCredential
+from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient, AnalyzeResult, DocumentTable
 from config.config import Config
 from src.adapters.logger import log_with_span
@@ -20,19 +20,22 @@ class DocumentIntelligence:
     """
     Handles text extraction using PyMuPDF + Azure Document Intelligence.
     Routes generic text pages to PyMuPDF and complex pages (Images/Tables) to Azure.
+    Uses DefaultAzureCredential for Passwordless / Managed Identity Authentication.
     """
 
     def __init__(self) -> None:
         try:
-            self.api_key: str = Config.AZURE_DOCUMENT_INTELLIGENCE_KEY
             self.endpoint: str = Config.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
 
-            if not self.api_key or not self.endpoint:
-                raise ValueError("Azure Document Intelligence credentials are missing.")
+            if not self.endpoint:
+                raise ValueError("Azure Document Intelligence endpoint is missing.")
+
+            # DefaultAzureCredential automatically manages tokens via Managed Identity or local environment credentials
+            self.credential = DefaultAzureCredential()
 
             self.client: DocumentAnalysisClient = DocumentAnalysisClient(
                 endpoint=self.endpoint,
-                credential=AzureKeyCredential(self.api_key),
+                credential=self.credential,
                 headers={"x-ms-useragent": "azure-search-chat-demo/1.0.0"},
             )
 

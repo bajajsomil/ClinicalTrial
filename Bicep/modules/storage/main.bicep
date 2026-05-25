@@ -14,6 +14,12 @@ param dnsZoneId string = ''
 ])
 param publicNetworkAccess string = 'Disabled'
 
+@description('Optional: The IP address of the deployer to whitelist')
+param deployerIp string = ''
+
+@description('Optional: Additional user allowed IP address or CIDR to whitelist')
+param userAllowedIp string = ''
+
 @description('The name of the storage account.')
 param storageAccountName string = 'clinicaltrialstore909'
 
@@ -22,6 +28,22 @@ param principalId string = ''
 
 @description('Optional: Set to true to create role assignments for Managed Identity.')
 param createRoleAssignments bool = false
+
+var deployerIpRule = !empty(deployerIp) ? [
+  {
+    value: deployerIp
+    action: 'Allow'
+  }
+] : []
+
+var userIpRule = !empty(userAllowedIp) ? [
+  {
+    value: userAllowedIp
+    action: 'Allow'
+  }
+] : []
+
+var ipRules = concat(deployerIpRule, userIpRule)
 
 // --- Storage Account ---
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
@@ -36,6 +58,14 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
     publicNetworkAccess: publicNetworkAccess
+    networkAcls: (publicNetworkAccess == 'Enabled') ? {
+      bypass: 'AzureServices'
+      defaultAction: 'Deny'
+      ipRules: ipRules
+    } : {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
   }
   tags: {
     workload: 'sandbox'

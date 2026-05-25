@@ -23,6 +23,9 @@ param publicNetworkAccess string = 'Disabled'
 @description('Optional: The IP address of the deployer to allow for deployment and access')
 param deployerIp string = ''
 
+@description('Optional: Additional user allowed IP address or CIDR to whitelist')
+param userAllowedIp string = ''
+
 @description('The name of the Azure Container Registry')
 param acrName string = 'clinicaltrialacr909'
 
@@ -285,18 +288,29 @@ resource frontend 'Microsoft.Web/sites@2022-09-01' = {
       alwaysOn: true
       linuxFxVersion: 'NODE|20-lts'
       appCommandLine: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
-      ipSecurityRestrictions: !empty(deployerIp) ? [
-        {
-          ipAddress: '${deployerIp}/32'
-          action: 'Allow'
-          priority: 100
-          name: 'AllowDeployer'
-          description: 'Allow access from developer machine'
-        }
-      ] : []
+      ipSecurityRestrictions: concat(
+        !empty(deployerIp) ? [
+          {
+            ipAddress: contains(deployerIp, '/') ? deployerIp : '${deployerIp}/32'
+            action: 'Allow'
+            priority: 100
+            name: 'AllowDeployer'
+            description: 'Allow access from developer machine'
+          }
+        ] : [],
+        !empty(userAllowedIp) ? [
+          {
+            ipAddress: contains(userAllowedIp, '/') ? userAllowedIp : '${userAllowedIp}/32'
+            action: 'Allow'
+            priority: 200
+            name: 'UserWhitelistedIp'
+            description: 'Allow access from user whitelisted IP address space'
+          }
+        ] : []
+      )
       scmIpSecurityRestrictions: !empty(deployerIp) ? [
         {
-          ipAddress: '${deployerIp}/32'
+          ipAddress: contains(deployerIp, '/') ? deployerIp : '${deployerIp}/32'
           action: 'Allow'
           priority: 100
           name: 'AllowDeployer'

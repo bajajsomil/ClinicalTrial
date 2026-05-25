@@ -3,6 +3,7 @@ import time
 import random
 import math
 from typing import List, Tuple
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AsyncAzureOpenAI
 import json
 from config.config import Config
@@ -14,15 +15,28 @@ class AzureOpenAIHelper:
     """
     Helper class for batch processing multiple Azure OpenAI requests concurrently.
     Supports JSON mode, token usage tracking, confidence scores, and detailed metrics.
+    Uses DefaultAzureCredential for Passwordless / Managed Identity Authentication.
     """
 
     def __init__(self):
         self.azure_endpoint = Config.AZURE_OPENAI_ENDPOINT
-        self.api_key = Config.AZURE_OPENAI_KEY
         self.api_version = Config.AZURE_OPENAI_VERSION
+
+        if not self.azure_endpoint:
+            raise ValueError("Azure OpenAI endpoint is missing.")
+
+        # 1. Initialize the credential object
+        self.credential = DefaultAzureCredential()
+
+        # 2. Wrap it in a token provider specific to Azure Cognitive Services
+        self.token_provider = get_bearer_token_provider(
+            self.credential, "https://cognitiveservices.azure.com/.default"
+        )
+
+        # 3. Initialize the async client with the token provider instead of an API key
         self.client = AsyncAzureOpenAI(
             azure_endpoint=self.azure_endpoint,
-            api_key=self.api_key,
+            azure_ad_token_provider=self.token_provider,
             api_version=self.api_version,
         )
 
@@ -98,15 +112,12 @@ class AzureOpenAIHelper:
                     pos += 1
 
             if json_objects:
-                # logger.info("Successfully decoded JSON object(s)")
                 for i in json_objects:
                     if isinstance(i,dict):
                         print("json decode result: ", i)
                         return DecodeJsonResult(data=i)
                 return DecodeJsonResult(error= "No JSON decoded")
-                # return DecodeJsonResult(data=json_objects[0])
             else:
-                # logger.error("No JSON object could be decoded from the text")
                 return DecodeJsonResult(error="No JSON decoded")
 
         except Exception as e:
@@ -140,9 +151,9 @@ class AzureOpenAIHelper:
             convert_to_json: bool = False,
             model: str = Config.GPT_GENERATION_4O_MINI_MODEL,
             logprobs: bool = False,
-            retries: int = 2,
+            retries: int = 1,
             request_index: int = 0,
-            timeout_seconds: int = 120
+            timeout_seconds: int = 90
         ) -> AzureResponseModel:
 
         TIMEOUT_SECONDS = timeout_seconds  # 1 minute timeout
@@ -250,7 +261,6 @@ class AzureOpenAIHelper:
                     }
                 )
 
-                #  retries due to timeout
                 if attempt < retries:
                     backoff = (2 ** attempt) + random.random()
                     await asyncio.sleep(backoff)
@@ -306,8 +316,8 @@ class AzureOpenAIHelper:
         convert_to_json: bool = False,
         model: str = Config.GPT_GENERATION_4O_MINI_MODEL,
         logprobs: bool = False,
-        retries: int = 2,
-        timeout_seconds: int = 120
+        retries: int = 1,
+        timeout_seconds: int = 90
     ) -> List[AzureResponseModel]:
 
         log_with_span(
