@@ -130,8 +130,6 @@ module storage './modules/storage/main.bicep' = {
   scope: rg
   params: {
     location: rg.location
-    subnetId: network.outputs.dbSubnetId
-    dnsZoneId: network.outputs.dnsZoneIdBlob
     storageAccountName: storageAccountName
     principalId: identity.outputs.principalId
     createRoleAssignments: createRoleAssignments
