@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { getWsBaseUrl } from '@/config/api';
 import {
   FileText,
@@ -35,6 +35,7 @@ const DocumentLoader = ({ file1, file2, onReset, onComplete }) => {
   const [comparisonData, setComparisonData] = useState(null);
   const wsRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const highlightTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -127,12 +128,13 @@ const DocumentLoader = ({ file1, file2, onReset, onComplete }) => {
 
           setMessages((prev) => [...prev, message]);
 
-          // Highlight animation
+          // Highlight animation — track timer so it can be cancelled on tab re-focus
           setHighlightedSections((prev) => {
             const newSections = [...prev, Math.floor(Math.random() * 5)];
-            setTimeout(() => {
+            const t = setTimeout(() => {
               setHighlightedSections((p) => p.slice(1));
             }, 1500);
+            highlightTimers.current.push(t);
             return newSections;
           });
         } else if (data.type === 'data') {
@@ -191,6 +193,22 @@ const DocumentLoader = ({ file1, file2, onReset, onComplete }) => {
       }
     };
   }, [file1, file2, onComplete]);
+
+  // ── Visibility catch-up ─────────────────────────────────────────────────────
+  // When returning to the tab, flush any stale highlight timers and clear
+  // highlighted sections so the visual state is consistent.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) return;
+      // Cancel all pending highlight-cleanup timers
+      highlightTimers.current.forEach(t => clearTimeout(t));
+      highlightTimers.current = [];
+      // Clear all highlighted sections immediately
+      setHighlightedSections([]);
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   if (showResult && comparisonData) {
     return (

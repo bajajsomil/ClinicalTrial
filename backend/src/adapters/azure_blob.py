@@ -1,25 +1,36 @@
 import os
 from typing import Optional
+from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, BlobClient, ContentSettings
 from config.config import Config
 from src.adapters.logger import log_with_span
 from src.processes.protocol_analyzer.models import BlobUploadInput
+from datetime import datetime, timedelta, timezone
+from azure.storage.blob import generate_container_sas, ContainerSasPermissions
 
 
 class AzureBlob:
     """
     Wrapper class for Azure Blob Storage operations.
-    Provides functionality to initialize blob clients and upload files.
+    Provides functionality to initialize blob clients and upload files using Managed Identity.
     """
 
     def __init__(self) -> None:
         """
-        Initialize the AzureBlob instance with a connection string.
-        Creates a BlobServiceClient for further operations.
+        Initialize the AzureBlob instance using DefaultAzureCredential.
+        Creates a BlobServiceClient for further operations without using a connection string.
         """
-        self.connection_string: str = Config.blob_connection_string
-        self.blob_service_client: BlobServiceClient = (
-            BlobServiceClient.from_connection_string(self.connection_string)
+        # Fetch the storage account name from your config instead of a connection string
+        self.storage_account_name: str = Config.storage_account_name
+        self.account_url: str = f"https://{self.storage_account_name}.blob.core.windows.net"
+        
+        # DefaultAzureCredential automatically picks up the Managed Identity 
+        # in Container Apps or your local Azure CLI credentials during local dev
+        self.credential = DefaultAzureCredential()
+
+        self.blob_service_client: BlobServiceClient = BlobServiceClient(
+            account_url=self.account_url,
+            credential=self.credential
         )
 
     def initialize_blob_client(self, container_name: str, file_name: str) -> Optional[BlobClient]:
@@ -81,9 +92,50 @@ class AzureBlob:
             return True
         except Exception as e:
             log_with_span(
-                "Error Uploading File in Blob", "Blob", "error", log_extra={'service_name': 'Azure Blob','input': upload_input.model_dump(), 'status': 'Failed', 'error': str(e)}
+                f"Error Uploading File in Blob {e}", "Blob", "error", log_extra={'service_name': 'Azure Blob','input': upload_input.model_dump(), 'status': 'Failed', 'error': str(e)}
             )
             return False
+
+    def generate_sas_token(self, container_name: str) -> str:
+        """
+        Generate a container SAS token using User Delegation Key (via DefaultAzureCredential).
+        """
+        
+        try:
+            # Expiry 24 hours from now
+            start_time = datetime.now(timezone.utc) - timedelta(minutes=5)
+            expiry_time = datetime.now(timezone.utc) + timedelta(hours=24)
+
+            # 1. Get a user delegation key
+            user_delegation_key = self.blob_service_client.get_user_delegation_key(
+                key_start_time=start_time,
+                key_expiry_time=expiry_time
+            )
+
+            # 2. Generate container SAS token
+            sas_token = generate_container_sas(
+                account_name=self.storage_account_name,
+                container_name=container_name,
+                user_delegation_key=user_delegation_key,
+                permission=ContainerSasPermissions(read=True),
+                expiry=expiry_time,
+                start=start_time
+            )
+            
+            return sas_token
+        except Exception as e:
+            log_with_span(
+                f"Error generating SAS token: {e}", 
+                "BlobSAS", 
+                "error", 
+                log_extra={
+                    'service_name': 'Azure Blob',
+                    'container_name': container_name,
+                    'status': 'Failed',
+                    'error': str(e)
+                }
+            )
+            raise e
 
 
 # Singleton instance

@@ -1,12 +1,19 @@
 // components/ProtocalAnalyzerLoader.tsx
 
-import React, { useState, useEffect } from 'react';
-import { Activity, FileText, Search, Users, MapPin, Clock, AlertTriangle, CheckCircle2, Brain, ArrowDown, Database, FileCheck, BarChart, Shield, ClipboardCheck, Microscope, TestTube } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Activity, FileText, Search, Users, MapPin, Clock, AlertTriangle, CheckCircle2, Brain, Database, FileCheck, BarChart, Shield, ClipboardCheck, Microscope, TestTube } from 'lucide-react';
 
 const ProtocolLoader = () => {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [activeMessages, setActiveMessages] = useState({ result1: 0, result2: 0 });
+
+  // Track absolute start time so visibility catch-up works correctly
+  const startTimeRef = useRef<number>(Date.now());
+  const r1IndexRef = useRef<number>(0);
+  const r2IndexRef = useRef<number>(0);
+  const intervalRef1 = useRef<ReturnType<typeof setInterval> | null>(null);
+  const intervalRef2 = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const result1Messages = [
     { icon: Search, text: 'Finding key requirements...', color: 'from-blue-300 to-blue-400' },
@@ -39,45 +46,109 @@ const ProtocolLoader = () => {
     { icon: Clock, text: 'Finding treatment period details...', color: 'from-amber-300 to-amber-400' },
   ];
 
+  // Step timings in ms
+  const stepTimings = [0, 2000, 4000, 6000];
+  const INTERVAL_MS = 2000;
+
+  const computeStateFromElapsed = (elapsed: number) => {
+    // Current step based on elapsed time
+    let step = 0;
+    for (let i = stepTimings.length - 1; i >= 0; i--) {
+      if (elapsed >= stepTimings[i]) { step = i + 1; break; }
+    }
+
+    // Message indices: messages start cycling after 6000ms
+    const messageElapsed = Math.max(0, elapsed - 6000);
+    const r1 = Math.floor(messageElapsed / INTERVAL_MS);
+    const r2 = Math.floor(messageElapsed / INTERVAL_MS);
+
+    // Progress: 0 → 50% in first 6s, then +2% per interval tick
+    const progressBase = elapsed >= 6000 ? 50 : (elapsed / 6000) * 50;
+    const progressExtra = Math.min(50, r1 * 2);
+    const prog = Math.min(100, progressBase + progressExtra);
+
+    return { step, r1, r2, prog };
+  };
+
   useEffect(() => {
-    // Fast initial steps - all completed in 6 seconds
-    const stepTimings = [0, 2000, 4000, 6000];
+    startTimeRef.current = Date.now();
+
+    // Step timeouts driven by actual timestamps (not affected by throttling
+    // because they fire once, and on return we catch up via visibilitychange)
     const stepTimeouts = stepTimings.map((timing, index) =>
       setTimeout(() => setCurrentStep(index + 1), timing)
     );
 
-    // Progress: 50% at 6 seconds (when containers appear), then increase with iterations
-    setProgress(0);
+    setTimeout(() => setProgress(50), 6000);
 
-    const initialProgressTimeout = setTimeout(() => {
-      setProgress(50); // Reach 50% when containers appear
-    }, 6000);
+    // Intervals for message cycling
+    intervalRef1.current = setInterval(() => {
+      r1IndexRef.current += 1;
+      const idx = r1IndexRef.current % result1Messages.length;
+      setActiveMessages(prev => ({ ...prev, result1: idx }));
+      setProgress(prev => Math.min(100, prev + 2));
+    }, INTERVAL_MS);
 
-    // Slow iteration of messages - starts after all steps are shown (6 seconds)
-    let r1Index = 0;
-    const result1Interval = setInterval(() => {
-      setActiveMessages(prev => ({ ...prev, result1: r1Index % result1Messages.length }));
-      r1Index++;
-      
-      // Increase progress with each message iteration
-      setProgress(prev => {
-        if (prev >= 100) return 100;
-        return prev + 2; // Increase by 2% per iteration
-      });
-    }, 2000);
-
-    let r2Index = 0;
-    const result2Interval = setInterval(() => {
-      setActiveMessages(prev => ({ ...prev, result2: r2Index % result2Messages.length }));
-      r2Index++;
-    }, 2000);
+    intervalRef2.current = setInterval(() => {
+      r2IndexRef.current += 1;
+      const idx = r2IndexRef.current % result2Messages.length;
+      setActiveMessages(prev => ({ ...prev, result2: idx }));
+    }, INTERVAL_MS);
 
     return () => {
-      clearTimeout(initialProgressTimeout);
-      clearInterval(result1Interval);
-      clearInterval(result2Interval);
-      stepTimeouts.forEach(timeout => clearTimeout(timeout));
+      if (intervalRef1.current) clearInterval(intervalRef1.current);
+      if (intervalRef2.current) clearInterval(intervalRef2.current);
+      stepTimeouts.forEach(t => clearTimeout(t));
     };
+  }, []);
+
+  // ── Visibility catch-up ───────────────────────────────────────────────────────
+  // When the tab becomes visible again, compute how far along we should be
+  // based on wall-clock time, and fast-forward all state at once.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) return;
+
+      const elapsed = Date.now() - startTimeRef.current;
+      const { step, r1, r2, prog } = computeStateFromElapsed(elapsed);
+
+      setCurrentStep(step);
+      setProgress(prog);
+
+      // Only update message indices if they've advanced
+      if (r1 > r1IndexRef.current) {
+        r1IndexRef.current = r1;
+        setActiveMessages(prev => ({
+          ...prev,
+          result1: r1 % result1Messages.length,
+        }));
+      }
+      if (r2 > r2IndexRef.current) {
+        r2IndexRef.current = r2;
+        setActiveMessages(prev => ({
+          ...prev,
+          result2: r2 % result2Messages.length,
+        }));
+      }
+
+      // Restart intervals from now so they stay on schedule
+      if (intervalRef1.current) clearInterval(intervalRef1.current);
+      if (intervalRef2.current) clearInterval(intervalRef2.current);
+
+      intervalRef1.current = setInterval(() => {
+        r1IndexRef.current += 1;
+        setActiveMessages(prev => ({ ...prev, result1: r1IndexRef.current % result1Messages.length }));
+        setProgress(prev => Math.min(100, prev + 2));
+      }, INTERVAL_MS);
+
+      intervalRef2.current = setInterval(() => {
+        r2IndexRef.current += 1;
+        setActiveMessages(prev => ({ ...prev, result2: r2IndexRef.current % result2Messages.length }));
+      }, INTERVAL_MS);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   return (
@@ -163,7 +234,7 @@ const ProtocolLoader = () => {
                           const Icon = msg.icon;
                           const actualIdx = Math.max(0, activeMessages.result1 - 1) + idx;
                           const isActive = activeMessages.result1 === actualIdx;
-                          const position = actualIdx - activeMessages.result1; // -1, 0, or 1
+                          const position = actualIdx - activeMessages.result1;
                           
                           return (
                             <div
@@ -215,7 +286,7 @@ const ProtocolLoader = () => {
                           const Icon = msg.icon;
                           const actualIdx = Math.max(0, activeMessages.result2 - 1) + idx;
                           const isActive = activeMessages.result2 === actualIdx;
-                          const position = actualIdx - activeMessages.result2; // -1, 0, or 1
+                          const position = actualIdx - activeMessages.result2;
                           
                           return (
                             <div
