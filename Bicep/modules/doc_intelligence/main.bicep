@@ -43,7 +43,7 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = i
   name: guid(formrecognizer.id, principalId, 'Cognitive Services User')
   scope: formrecognizer
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b40fb-5815-43a2-ac46-92c12159d690')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
     principalId: principalId
     principalType: 'ServicePrincipal'
   }
