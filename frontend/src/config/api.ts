@@ -22,3 +22,20 @@ export const getWsBaseUrl = (): string =>
 
 export const BLOB_URL: string =
   import.meta.env.VITE_PHARMA_CONTAINER_URL ?? "https://cofrablob.blob.core.windows.net/pharma/";
+
+/**
+ * Fetches the Azure Storage Service SAS token for the container from the backend.
+ */
+export const fetchContainerSasToken = async (): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/sas-token`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.sas_token || "";
+  } catch (error) {
+    console.error("Failed to fetch SAS token from backend:", error);
+    return "";
+  }
+};

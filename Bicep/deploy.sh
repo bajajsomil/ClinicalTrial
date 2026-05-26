@@ -126,6 +126,7 @@ DEPLOYMENT_OUTPUT=$(az deployment sub create \
     storageAccountName="$STORAGE_ACCOUNT_NAME" \
     location="$LOCATION" \
     deployerIp="$DEPLOYER_IP" \
+    createRoleAssignments=true \
   --output json | tr -d '\r')
 
 

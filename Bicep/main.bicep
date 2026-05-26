@@ -61,7 +61,7 @@ param deployerIp string = ''
 param userAllowedIp string = ''
 
 @description('Set to true to create role assignments for Managed Identity. Set to false if you do not have User Access Administrator or Owner permissions.')
-param createRoleAssignments bool = false
+param createRoleAssignments bool = true
 
 resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: rgName

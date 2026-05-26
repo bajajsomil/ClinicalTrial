@@ -1,38 +1,152 @@
 {
-  "success": true,
-  "result": {
+  "type": "complete",
+  "step": "complete",
+  "message": "Comparison complete!",
+  "progress": 100,
+  "data": {
     "differences": {
-      "trial assessments": {
-        "assessment of efficacy": {
+      "TRIAL ASSESSMENTS": {
+        "Disease Assessments": {
           "addons": [
-            "Version B adds a long-term exploratory analysis of benznidazole, bzn/e1224, nifurtimox, posaconazole, and ravuconazole for testing purposes, correlating incidence of and time to sustained parasitological clearance with changes in t. cruzi serology, safety outcomes, and pharmacokinetic parameters, as outlined in the extended follow-up section."
+            "Version B introduces detailed subsections on tumor marker evaluation, disease status evaluation using CT/MRI, long-term safety and efficacy follow-up, pharmacokinetic assessments, anti-drug antibody testing, biomarker sample collection, handling of biological samples, follow-up assessments, and appropriateness of measurements."
           ],
           "removed": [
-            "Version A describes a qualitative, quantitative, and multi-criteria efficacy assessment of benznidazole and bzn/e1224, correlating incidence of and time to parasitological clearance with changes in t. cruzi serology and with safety and pharmacokinetic parameters, as described in the following sections."
+            "Version A lacks the detailed subsections and specific procedural guidelines for tumor marker evaluation, imaging protocols, long-term follow-up, pharmacokinetic assessments, anti-drug antibody testing, and biomarker sample collection."
           ],
           "impact": [
-            "The changes expand the scope of exploratory analysis to include additional drugs and focus on long-term outcomes, which may affect trial operations and the interpretation of efficacy across a broader range of treatments."
+            "The additions in Version B enhance trial operations by providing comprehensive procedural guidelines, improve regulatory compliance through detailed safety and efficacy monitoring, and refine data interpretation by specifying imaging and biomarker protocols."
+          ]
+        },
+        "Tumor Marker Evaluation": {
+          "addons": [
+            "None, as the entire section was removed in Version B."
+          ],
+          "removed": [
+            "Details about tumor marker evaluation, including the inclusion of Carcinoembryonic Antigen (CEA), timing of assessments (e.g., screening, end of cycles), and specific notes on end-of-cycle assessments and follow-up evaluations."
+          ],
+          "impact": [
+            "The removal of this section may lead to ambiguity in trial operations and regulatory compliance regarding tumor marker evaluation procedures and timelines."
+          ]
+        }
+      },
+      "SUMMARY OF CHANGES": {
+        "Protocol Amendment 1 dated 09-Nov-2015": {
+          "addons": [
+            "The blood volume for biomarker analysis was increased from 5mL to 20mL per sample, with specific collection points defined (screening, end of cycle 2 or disease progression, and end of trial).",
+            "The timing for collecting AEs/SAEs was extended to include unanticipated problems related to trial conduct, including adverse effects from protocol-specific investigations at screening.",
+            "Clarifications were made regarding the recording of AEs and SAEs, specifying that all AEs will be recorded from the initiation of Sym004 dosing and signing of informed consent.",
+            "TEAEs and Non-TEAEs were defined, with TEAEs occurring after first treatment and Non-TEAEs collected before dosing.",
+            "The presentation of AEs was updated to include TEAEs by SOC and preferred term, with frequencies presented as numbers and percentages of patients experiencing events.",
+            "The adverse event recording period was updated to start from the signing of informed consent rather than the first treatment."
+          ],
+          "removed": [
+            "The original blood volume for biomarker analysis was 5mL per sample.",
+            "The timing for collecting AEs/SAEs was not extended to include unanticipated problems or adverse effects from protocol-specific investigations at screening.",
+            "The recording of AEs and SAEs did not explicitly include the initiation of Sym004 dosing or the signing of informed consent.",
+            "TEAEs and Non-TEAEs were not previously defined, and their presentation by SOC and preferred term was not specified.",
+            "The adverse event recording period previously started from the first treatment rather than the signing of informed consent."
+          ],
+          "impact": [
+            "The increase in blood volume and defined collection points improve biomarker analysis but may increase patient burden.",
+            "Extending AE/SAE timing enhances safety surveillance and compliance with regulatory requirements.",
+            "Clarifications on AE/SAE recording improve data accuracy and regulatory compliance.",
+            "Defining TEAEs and Non-TEAEs ensures clearer data interpretation and alignment with regulatory standards.",
+            "Updating the adverse event recording period ensures comprehensive safety data collection from the point of informed consent."
+          ]
+        },
+        "Protocol Amendment 2 dated 05-Aug-2016": {
+          "addons": [
+            "Additional dose levels were added to explore safety and tolerability of Sym004.",
+            "Mandatory prophylaxis for diarrhea during Cycle 1 was introduced, with potential continuation based on investigator discretion.",
+            "Inclusion criteria were modified to allow patients who progressed >3 months after the last dose and those treated with QT-prolonging drugs.",
+            "Clarification was added that the RP2D will be based on MTD, toxicities, PK, and other data.",
+            "Biomarker testing was clarified to include only CEA from tumor biopsies.",
+            "Statistical section was updated to clarify patient numbers and include references.",
+            "Grading of adverse events was specified for changes in severity.",
+            "Prophylactic treatment for nausea and vomiting was added, and loperamide was mandated for diarrhea prevention during Cycle 1.",
+            "Prohibited drugs with potential to cause QT prolongation were removed from exclusion criteria.",
+            "The exclusion criterion for active thrombosis was updated to reduce the time frame from 6 months to 4 weeks.",
+            "Dose adjustments for obese patients were removed, and a new algorithm for dose adjustments based on BMI >30 kg/m2 was introduced.",
+            "Prophylaxis for gastrointestinal toxicities was expanded to include mandatory diarrhea prophylaxis.",
+            "Adverse event reporting was updated to include changes in severity and additional ECG requirements for certain conditions.",
+            "Efficacy assessments were updated to include CEA and CA19-9 at specific intervals, with results presented using descriptive statistics."
+          ],
+          "removed": [
+            "Sym004 dose adjustment for obese patients was removed.",
+            "Drugs with potential to cause QT prolongation were removed from exclusion criteria.",
+            "The requirement to collect CA19-9 tumor marker was removed.",
+            "The requirement for dose adjustments for weight changes ≥+5% was removed and replaced with adjustments for changes ≥+10%.",
+            "The section on dose adjustments for obese patients was removed entirely.",
+            "The requirement to collect tumor imaging of the pelvis was removed."
+          ],
+          "impact": [
+            "Adding additional dose levels and modifying inclusion criteria may expand the eligible patient population and provide more robust safety and efficacy data.",
+            "Mandatory diarrhea prophylaxis and expanded gastrointestinal toxicity management improve patient safety and treatment tolerability.",
+            "Removing dose adjustments for obese patients and introducing a BMI-based algorithm may simplify dosing but could impact individual patient dosing accuracy.",
+            "Clarifications to RP2D determination and statistical requirements enhance regulatory compliance and trial design transparency.",
+            "Changes to biomarker collection and tumor imaging may affect the scope of data available for analysis and interpretation."
+          ]
+        },
+        "Protocol Amendment 3 dated 22-Feb-2017": {
+          "addons": [
+            "Explanation included for prematurely discontinuing trial enrollment due to the Sponsor's decision to discontinue the development of Sym004 in combination with FOLFIRI.",
+            "Visit schedule revised to apply only until Sym004 has been discontinued, with an End of Treatment (EOT) visit within 10 days and a follow-up visit 1 month after the last administration of Sym004.",
+            "Omission of non-safety-related assessments and modification of the statistical section to focus on safety reporting required by authorities.",
+            "Revised AE/SAE reporting requirements to exclude progression of disease unless atypical symptoms are present.",
+            "Reduction in trial data collection to focus on safety reporting required by regulatory authorities after enrollment closure."
+          ],
+          "removed": [
+            "Original text indicating progression of disease would be captured as an AE.",
+            "Original text specifying additional assessments such as PK sampling, ADA testing, and biomarker blood and urine samples.",
+            "Original text indicating the treatment phase continues until the patient is withdrawn from trial treatments without specifying discontinuation criteria for Sym004."
+          ],
+          "impact": [
+            "The addition of the explanation for trial discontinuation improves transparency and aligns with regulatory expectations.",
+            "Revised visit schedules streamline trial operations and ensure compliance with updated treatment protocols.",
+            "Omission of non-safety-related assessments reduces data collection burden and focuses on regulatory safety requirements.",
+            "Changes to AE/SAE reporting criteria enhance clarity in safety data interpretation and regulatory compliance.",
+            "Reduction in trial data collection simplifies operations and aligns with post-enrollment regulatory requirements."
           ]
         }
       }
     },
-    "section_added_or_removed_impact": {
+    "new_sections": {
       "added": {
-        "data analysis and statistical methods": {
-          "long term follow up": {
-            "Impact": "The addition of a 'long term follow up' section to the data analysis and statistical methods introduces extended monitoring of participants at 18 and 24 months post-randomization. This enhances trial conduct by allowing for the collection of long-term efficacy and safety data, which can identify late-emerging adverse events and provide a more comprehensive assessment of treatment durability. Participant safety is improved through ongoing surveillance for delayed hepatic, cardiac, or neurological events. Regulatory compliance is strengthened, as long-term data are often required or valued by regulatory agencies for chronic or relapsing conditions. Investigators and study staff will have new responsibilities to coordinate, schedule, and conduct these additional follow-up visits, as well as to collect and report extended laboratory and clinical data. Sponsors must ensure resources and infrastructure are in place for prolonged follow-up and data management. The inclusion of exploratory analyses (e.g., Kaplan-Meier estimates, association with baseline characteristics) may impact statistical analysis plans and require additional data handling and interpretation. Overall, this section fills potential gaps in understanding long-term outcomes and supports the scientific and regulatory robustness of the trial."
+        "TRIAL ASSESSMENTS": {
+          "Long-Term Safety and Efficacy Follow-Up": {
+            "Impact": "The addition of a Long-Term Safety and Efficacy Follow-Up (LTFU) section significantly enhances the protocol by extending participant monitoring beyond the primary treatment phase. This improves participant safety by enabling detection of delayed adverse events and assessment of sustained efficacy, which is particularly important for investigational products with unknown long-term effects. Regulatory compliance is strengthened, as ongoing pharmacovigilance is a common requirement for new therapies. Investigators and study staff now have new responsibilities, including scheduling and conducting follow-up visits at specified intervals (6, 12, 18, and 24 months), collecting additional data (SAEs, AESIs, laboratory results, vital signs, patient-reported outcomes, and concomitant medications), and ensuring accurate long-term data capture. Sponsors must ensure resources and systems are in place for extended follow-up and data management. The inclusion of LTFU may impact data collection by increasing the volume and duration of data, potentially affecting statistical analysis plans, especially regarding long-term safety and efficacy endpoints. Overall, this addition provides a more comprehensive safety and efficacy profile for the investigational product."
           }
         }
       },
       "removed": {
-        "trial assessments": {
-          "pk assessments": {
-            "Impact": "The removal of the detailed PK (pharmacokinetic) assessments section introduces significant risks and gaps in the clinical trial protocol. Without this information, investigators and study staff lack clear guidance on blood sample collection methods, timing, and handling for PK analysis, which may lead to inconsistent or incorrect sample collection, compromising data integrity. The absence of specified analytical methods, quantification limits, and PK parameters to be modeled (AUC, Cmax, Cmin, CL, Vd, t1/2) undermines the ability to accurately assess drug exposure and its relationship to efficacy and safety outcomes. This could negatively impact participant safety monitoring, as PK data are often used to identify outliers or unexpected drug levels. Regulatory compliance may be jeopardized, as authorities expect detailed PK sampling and analysis plans to ensure robust data collection and interpretation. The removal also creates gaps for investigators regarding documentation in the CRF, sample handling, and correlation of PK data with clinical endpoints, potentially affecting the validity of the trial's primary and secondary analyses and making monitoring and reporting more challenging."
+        "TRIAL ASSESSMENTS": {
+          "Biochemistry Panel": {
+            "Impact": "Removing the Biochemistry Panel section poses significant risks to participant safety and trial integrity. Without scheduled and detailed biochemistry assessments, investigators may miss clinically significant electrolyte or organ function abnormalities, which could lead to unrecognized adverse events or dosing errors. This removal creates gaps in safety monitoring, reduces the ability to detect and manage toxicities, and may compromise regulatory compliance, as routine laboratory monitoring is a standard requirement in most clinical trials. Investigators and study staff lose clear guidance on when and how to perform these assessments, potentially leading to inconsistent data collection and difficulties in adverse event attribution. The absence of this section may also hinder data analysis related to safety endpoints and could result in regulatory queries or findings during audits or inspections."
           }
+        },
+        "ADVERSE EVENTS": {
+          "Observation Period for Dose-Limiting Toxicities": {
+            "Impact": "Removing the section detailing the observation period for dose-limiting toxicities (DLTs) introduces significant risks to trial conduct and participant safety. Without a clearly defined DLT observation window and criteria for dose escalation, investigators may lack standardized guidance on when and how to assess safety, potentially leading to inconsistent or unsafe dose escalation decisions. This could increase the risk of exposing participants to higher, potentially unsafe doses without adequate safety monitoring. Regulatory compliance may be compromised, as authorities expect explicit DLT assessment periods in dose-escalation studies. The removal also creates gaps in documentation for investigators, complicates monitoring and reporting of adverse events, and may undermine the integrity of safety data and statistical analysis related to dose escalation."
+          }
+        },
+        "SUMMARY OF CHANGES": {
+            "Impact": "The removal of the 'SUMMARY OF CHANGES' section, which detailed the rationale and specific protocol modifications from Amendment 3 (including early trial discontinuation, changes to visit schedules, omission of non-safety assessments, and revised AE/SAE reporting), poses several risks. First, it reduces transparency for investigators, monitors, and regulatory authorities regarding the evolution of the protocol and the reasons for significant changes, such as stopping enrollment and limiting data collection to safety endpoints. This may hinder regulatory compliance, as authorities often require clear documentation of protocol amendments and their justifications. For investigators and study staff, the absence of this summary could create confusion about which assessments and procedures are still required, potentially leading to inconsistent trial conduct, missed safety follow-up, or improper data collection. The removal also creates a gap in the historical record, complicating monitoring, auditing, and reporting, and may impact participant safety if changes to AE/SAE reporting or follow-up procedures are not clearly communicated. Overall, this omission undermines protocol clarity, regulatory transparency, and operational consistency."
         }
       }
     },
-    "summary": "- The exploratory efficacy analysis has been expanded to include additional drugs (benznidazole, bzn/e1224, nifurtimox, posaconazole, and ravuconazole), broadening the scope of long-term outcomes evaluated.  \n- The earlier multi-criteria efficacy assessment description has been removed, which may reduce clarity around how qualitative and quantitative measures were originally planned.  \n- A new 'long term follow up' section has been added, introducing 18- and 24-month monitoring to strengthen long-term safety, efficacy evaluation, and regulatory compliance.  \n- Extended follow-up responsibilities increase operational demands on investigators and require greater coordination, data collection, and resources.  \n- Removal of the detailed PK assessment section creates major risks, including unclear sample collection procedures, weakened exposure–response analysis, and potential threats to data integrity and patient safety.  \n- Loss of PK methodology details (e.g., sampling schedule, analytical methods, PK parameters) may hinder regulatory acceptability and complicate interpretation of clinical endpoints.  "
-  },
-  "error": null
+    "model_tokens": {
+      "gpt41": {
+        "input_tokens": 32267,
+        "output_tokens": 6590
+      },
+      "gpt4o": {
+        "input_tokens": 155223,
+        "output_tokens": 2174
+      },
+      "gpt4o_mini": {
+        "input_tokens": 2714,
+        "output_tokens": 220
+      }
+    }
+  }
 }
